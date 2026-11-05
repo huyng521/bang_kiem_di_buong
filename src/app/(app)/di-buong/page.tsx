@@ -3,6 +3,7 @@ import { requireRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { batDauDiBuong } from "./actions";
 import { hienGio, hienNgay } from "@/lib/thoi-gian";
+import { NhacKhacPhuc } from "@/components/nhac-khac-phuc";
 
 export default async function DiBuongPage({
   searchParams,
@@ -46,6 +47,8 @@ export default async function DiBuongPage({
           </button>
         </form>
       )}
+
+      {user.nguoiDung.vai_tro === "truong_khoa" && user.nguoiDung.khoa_id && <NhacKhacPhuc khoaId={user.nguoiDung.khoa_id} />}
 
       <section>
         <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-500">

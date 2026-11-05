@@ -39,11 +39,21 @@ export async function taoDb(): Promise<PGlite> {
 }
 
 /** Chạy fn với tư cách một người dùng đã đăng nhập (authUserId), RLS được áp dụng. */
+let trongGiaoDich = 0;
+
 export async function voiTuCach<T>(db: PGlite, authUserId: string | null, fn: () => Promise<T>): Promise<T> {
+  // Trong giao dịch kiểm thử: đặt savepoint để một lệnh bị chặn (lỗi mong đợi)
+  // không làm hỏng cả giao dịch, các lệnh sau vẫn chạy tiếp được.
+  if (trongGiaoDich) await db.exec("savepoint sp_vai_tro");
   await db.query(`select set_config('request.jwt.claim.sub', $1, false)`, [authUserId ?? ""]);
   await db.exec(`set role ${authUserId ? "authenticated" : "anon"}`);
   try {
-    return await fn();
+    const kq = await fn();
+    if (trongGiaoDich) await db.exec("release savepoint sp_vai_tro");
+    return kq;
+  } catch (e) {
+    if (trongGiaoDich) await db.exec("rollback to savepoint sp_vai_tro");
+    throw e;
   } finally {
     await db.exec(`reset role`);
     await db.query(`select set_config('request.jwt.claim.sub', '', false)`);
@@ -53,9 +63,11 @@ export async function voiTuCach<T>(db: PGlite, authUserId: string | null, fn: ()
 /** Chạy fn trong một giao dịch rồi hoàn tác, để mỗi bài kiểm thử độc lập. */
 export async function roiHoanTac(db: PGlite, fn: () => Promise<void>): Promise<void> {
   await db.exec("begin");
+  trongGiaoDich++;
   try {
     await fn();
   } finally {
+    trongGiaoDich--;
     await db.exec("rollback");
   }
 }

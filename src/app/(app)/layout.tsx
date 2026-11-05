@@ -28,7 +28,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           { href: "/bao-cao", label: "Báo cáo" },
           { href: "/di-buong", label: "Các phiên" },
         ];
-  navLinks.push({ href: "/doi-mat-khau", label: "Đổi mật khẩu" });
+  navLinks.push({ href: "/khac-phuc", label: "Khắc phục" }, { href: "/doi-mat-khau", label: "Đổi mật khẩu" });
 
   return (
     <div className="flex min-h-full flex-1 flex-col">

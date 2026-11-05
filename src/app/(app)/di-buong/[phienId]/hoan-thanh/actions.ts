@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { getPhienOrNotFound, phienCoTheSua } from "@/lib/phien";
+import { layMucKhongDat } from "@/lib/khong-dat";
 
 export interface HoanThanhState {
   loi?: string;
@@ -46,5 +47,6 @@ export async function hoanThanhPhien(phienId: string) {
     .eq("id", phienId);
 
   revalidatePath("/di-buong");
-  redirect(`/di-buong/${phienId}`);
+  const coKhongDat = (await layMucKhongDat(phienId)).length > 0;
+  redirect(coKhongDat ? `/di-buong/${phienId}/khac-phuc` : `/di-buong/${phienId}`);
 }

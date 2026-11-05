@@ -80,6 +80,14 @@ export default async function TongQuanPhienPage({
             Hoàn thành phiên
           </Link>
         )}
+        {phien.trang_thai === "hoan_thanh" && (
+          <Link
+            href={`/di-buong/${phienId}/khac-phuc`}
+            className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 font-semibold text-amber-900 active:bg-amber-100"
+          >
+            Mục không đạt cần khắc phục →
+          </Link>
+        )}
         <a
           href={`/di-buong/${phienId}/export`}
           className="rounded-xl border border-blue-300 bg-blue-50 px-4 py-3 text-center font-semibold text-blue-700 active:bg-blue-100"

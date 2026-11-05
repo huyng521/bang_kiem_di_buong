@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireRole } from "@/lib/auth";
 import { getPhienOrNotFound } from "@/lib/phien";
 import { Phan1Form } from "./form";
+import { NhacKhacPhuc } from "@/components/nhac-khac-phuc";
 
 export default async function Phan1Page({
   params,
@@ -25,6 +26,7 @@ export default async function Phan1Page({
           Nhập thông tin tổng quan của khoa hôm nay trước khi kiểm tra từng phòng.
         </p>
       </div>
+      {phien.trang_thai === "draft" && <NhacKhacPhuc khoaId={phien.khoa_id} />}
       <Phan1Form phienId={phienId} phien={phien} hoTenNguoiBaoCao={user.nguoiDung.ho_ten} />
     </div>
   );

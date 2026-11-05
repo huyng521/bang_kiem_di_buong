@@ -118,6 +118,50 @@ export type MinhChungAnh = {
   phien_kiem_tra_id: string | null;
 };
 
+export type MucUuTien = "thap" | "trung_binh" | "cao";
+export type TrangThaiKhacPhuc = "moi" | "dang_xu_ly" | "da_khac_phuc" | "da_xac_nhan" | "huy";
+
+export type HanhDongKhacPhuc = {
+  id: string;
+  khoa_id: string;
+  phien_kiem_tra_id: string;
+  checklist_item_id: string;
+  mo_ta_van_de: string;
+  bien_phap: string | null;
+  nguoi_phu_trach: string | null;
+  han_xu_ly: string | null;
+  muc_uu_tien: MucUuTien;
+  trang_thai: TrangThaiKhacPhuc;
+  ngay_hoan_thanh: string | null;
+  ghi_chu_khac_phuc: string | null;
+  ly_do_huy: string | null;
+  nguoi_tao_id: string | null;
+  nguoi_xac_nhan_id: string | null;
+  xac_nhan_luc: string | null;
+  created_at: string;
+  updated_at: string;
+};
+export type HanhDongKhacPhucKetQua = { hanh_dong_id: string; ket_qua_kiem_tra_id: string };
+export type KhacPhucBoQua = { phien_kiem_tra_id: string; checklist_item_id: string; khoa_id: string; nguoi_id: string | null; luc: string };
+export type HanhDongKhacPhucLichSu = {
+  id: number;
+  hanh_dong_id: string;
+  tu_trang_thai: TrangThaiKhacPhuc | null;
+  den_trang_thai: TrangThaiKhacPhuc;
+  ghi_chu: string | null;
+  nguoi_id: string | null;
+  luc: string;
+};
+export type ThongKeKhacPhucRow = {
+  khoa_id: string;
+  so_tong: number;
+  so_mo: number;
+  so_qua_han: number;
+  so_da_xac_nhan: number;
+  so_huy: number;
+  tb_ngay_khac_phuc: number | null;
+};
+
 // Danh sách 15 field bắt buộc/không bắt buộc của Phần I, dùng để validate.
 export const PHAN_1_FIELDS_BAT_BUOC = [
   "ngay_bao_cao",
@@ -175,6 +219,30 @@ export interface Database {
         Update: Partial<PhienKiemTraPhong>;
         Relationships: [];
       };
+      hanh_dong_khac_phuc: {
+        Row: HanhDongKhacPhuc;
+        Insert: Partial<HanhDongKhacPhuc>;
+        Update: Partial<HanhDongKhacPhuc>;
+        Relationships: [];
+      };
+      hanh_dong_khac_phuc_ket_qua: {
+        Row: HanhDongKhacPhucKetQua;
+        Insert: Partial<HanhDongKhacPhucKetQua>;
+        Update: Partial<HanhDongKhacPhucKetQua>;
+        Relationships: [];
+      };
+      khac_phuc_bo_qua: {
+        Row: KhacPhucBoQua;
+        Insert: Partial<KhacPhucBoQua>;
+        Update: Partial<KhacPhucBoQua>;
+        Relationships: [];
+      };
+      hanh_dong_khac_phuc_lich_su: {
+        Row: HanhDongKhacPhucLichSu;
+        Insert: Partial<HanhDongKhacPhucLichSu>;
+        Update: Partial<HanhDongKhacPhucLichSu>;
+        Relationships: [];
+      };
       minh_chung_anh: {
         Row: MinhChungAnh;
         Insert: Partial<MinhChungAnh>;
@@ -190,6 +258,10 @@ export interface Database {
     };
     Views: Record<string, never>;
     Functions: {
+      thong_ke_khac_phuc: {
+        Args: { p_tu: string; p_den: string };
+        Returns: ThongKeKhacPhucRow[];
+      };
       bao_cao_ty_le_dat: {
         Args: { p_tu_ngay: string; p_den_ngay: string };
         Returns: BaoCaoTyLeDatRow[];
