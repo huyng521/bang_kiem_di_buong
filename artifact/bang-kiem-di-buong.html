@@ -219,7 +219,7 @@ const INT_KEYS = PHAN1.filter((f) => f.type === "int").map((f) => f.k);
 
 /* ----------------------------- Trạng thái ----------------------------- */
 const S = {
-  db: null, user: null, downloads: null, myId: null, myName: "", isAdmin: false, noDb: false, timedOut: false,
+  db: null, user: null, downloads: null, myId: null, myName: "", isOwner: false, canEditPage: false, noDb: false, timedOut: false,
   data: { khoa: {}, phong: {}, checklist: {}, nguoi_dung: {}, phien: {}, yeu_cau: {} },
   ready: {}, err: {}, profiles: {}, profReq: new Set(),
   view: { name: "home", args: {} },
@@ -290,7 +290,7 @@ function all(coll) { return Object.keys(S.data[coll]).map((id) => ({ id, ...get(
 /* ----------------------------- Vai trò ----------------------------- */
 function myRecord() { return S.myId ? get("nguoi_dung", S.myId) : null; }
 function role() {
-  if (S.isAdmin) return "admin";
+  if (S.isOwner) return "admin";
   const r = myRecord();
   return r && r.active !== false ? r.vai_tro : null;
 }
@@ -346,7 +346,7 @@ async function boot() {
   S.db = db;
   if (user) {
     const me = await user.me();
-    S.myId = me.id; S.myName = me.name || ""; S.isAdmin = !!me.canEdit;
+    S.myId = me.id; S.myName = me.name || ""; S.isOwner = !!me.isOwner; S.canEditPage = !!me.canEdit;
   }
   const t0 = setTimeout(() => { if (!S.ready.nguoi_dung) { S.timedOut = true; render(); } }, 10000);
   sub("khoa", db.collection("khoa"));
@@ -354,8 +354,8 @@ async function boot() {
   sub("checklist", db.collection("checklist").orderBy("stt"));
   sub("nguoi_dung", db.collection("nguoi_dung"));
   sub("phien", db.collection("phien").orderBy("ngay_bao_cao", "desc").limit(1000));
-  if (S.isAdmin) sub("yeu_cau", db.collection("yeu_cau"));
-  else if (S.myId) {
+  if (S.canEditPage) sub("yeu_cau", db.collection("yeu_cau"));
+  if (!S.isOwner && S.myId) {
     db.doc("yeu_cau/" + S.myId).onSnapshot((d) => { S.myRequest = d.exists ? d.data() : null; scheduleRender(); }, () => {});
   }
   const stop = setInterval(() => { if (S.ready.nguoi_dung) { clearTimeout(t0); clearInterval(stop); S.timedOut = false; } }, 300);
@@ -440,7 +440,8 @@ function viewNoAccess() {
     <label class="f"><span>Khoa bạn phụ trách (nếu là Trưởng khoa)</span><input type="text" id="req_khoa" placeholder="Ví dụ: Khoa Nội tổng hợp"></label>
     <button class="btn primary" type="submit">Gửi yêu cầu cấp quyền</button></form>`;
   return `<div class="card stack"><p class="eyebrow">Chưa được cấp quyền</p><h2>Xin chào${S.myName ? ", " + esc(S.myName) : ""}</h2>
-  <p class="muted">Tài khoản của bạn chưa được Quản trị viên gán vai trò. Gửi yêu cầu bên dưới hoặc báo trực tiếp cho Phòng Điều dưỡng.</p>${form}</div>`;
+  <p class="muted">Tài khoản của bạn chưa được Quản trị viên gán vai trò. Gửi yêu cầu bên dưới hoặc báo trực tiếp cho Phòng Điều dưỡng.</p>${form}
+  ${S.canEditPage || S.myRequest ? "" : `<p class="muted small" style="margin:0">Nếu bấm gửi mà báo lỗi: bạn đang được chia sẻ ở mức Viewer. Ban Giám đốc thì cứ báo Quản trị viên thêm bạn; Trưởng khoa cần được chia sẻ ở mức Editor.</p>`}</div>`;
 }
 
 /* ---------- Trang chủ đi buồng / lịch sử ---------- */
@@ -678,21 +679,21 @@ function adminUsers() {
   const reqs = all("yeu_cau");
   const users = all("nguoi_dung").sort((a, b) => byNum(personName(a.id), personName(b.id)));
   const reqHtml = reqs.map((q) => `<li class="card stack"><div class="person"><img class="ava" alt="" src="${esc((S.profiles[q.id] || {}).avatarUrl || "")}"><div><b>${esc(q.ho_ten_de_nghi || (S.profiles[q.id] || {}).name || "Người dùng")}</b><span class="muted small">Khoa đề nghị: ${esc(q.khoa_de_nghi || "—")} · ${esc(fmtDate((q.thoi_gian || "").slice(0, 10)))}</span></div></div>
-    <div class="row"><select class="grow" id="rq_k_${q.id}">${khoaOptions("", "— Chọn khoa —")}</select><button class="btn primary sm" data-act="approve" data-id="${q.id}" data-v="truong_khoa">Cấp quyền Trưởng khoa</button><button class="btn sm" data-act="approve" data-id="${q.id}" data-v="ban_giam_doc">Ban Giám đốc</button><button class="btn sm danger" data-act="reject" data-id="${q.id}">Từ chối</button></div></li>`).join("");
+    <div class="row"><select class="grow" id="rq_k_${q.id}">${khoaOptions("", "— Chọn khoa —")}</select><button class="btn primary sm" data-act="approve" data-id="${q.id}" data-v="truong_khoa">Cấp quyền Trưởng khoa</button><button class="btn sm" data-act="approve" data-id="${q.id}" data-v="ban_giam_doc">Ban Giám đốc</button><button class="btn sm" data-act="approve" data-id="${q.id}" data-v="admin">Quản trị viên</button><button class="btn sm danger" data-act="reject" data-id="${q.id}">Từ chối</button></div></li>`).join("");
   const hits = S.ui.hits.filter((h) => !get("nguoi_dung", h.id)).map((h) => `<button class="hit" data-act="addUser" data-id="${esc(h.id)}"><img alt="" src="${esc(h.avatarUrl)}"><span class="grow">${esc(h.name)}</span><span class="link-btn">+ Thêm</span></button>`).join("");
   const rows = users.map((u) => {
     const conf = S.ui.confirm === "rmuser:" + u.id;
     return `<li class="card stack"><div class="person"><img class="ava" alt="" src="${esc((S.profiles[u.id] || {}).avatarUrl || "")}"><div style="min-width:0"><b>${esc(personName(u.id))}</b><span class="muted small">Tài khoản: ${esc((S.profiles[u.id] || {}).name || "—")}${u.active === false ? " · Đã khóa" : ""}</span></div></div>
       <div class="two"><label class="f"><span class="small">Họ tên chính thức (in trên báo cáo)</span><input type="text" id="u_ht_${u.id}" value="${esc(u.ho_ten || "")}" data-chg="ufield" data-id="${u.id}" data-k="ho_ten" placeholder="Để trống = dùng tên tài khoản"></label>
-      <label class="f"><span class="small">Vai trò</span><select id="u_vt_${u.id}" data-chg="ufield" data-id="${u.id}" data-k="vai_tro"><option value="truong_khoa" ${u.vai_tro === "truong_khoa" ? "selected" : ""}>ĐD/HS Trưởng khoa</option><option value="ban_giam_doc" ${u.vai_tro === "ban_giam_doc" ? "selected" : ""}>Ban Giám đốc (chỉ xem)</option></select></label></div>
+      <label class="f"><span class="small">Vai trò</span><select id="u_vt_${u.id}" data-chg="ufield" data-id="${u.id}" data-k="vai_tro"><option value="truong_khoa" ${u.vai_tro === "truong_khoa" ? "selected" : ""}>ĐD/HS Trưởng khoa</option><option value="ban_giam_doc" ${u.vai_tro === "ban_giam_doc" ? "selected" : ""}>Ban Giám đốc (chỉ xem)</option><option value="admin" ${u.vai_tro === "admin" ? "selected" : ""}>Quản trị viên</option></select></label></div>
       ${u.vai_tro === "truong_khoa" ? `<label class="f"><span class="small">Khoa phụ trách (chỉ thấy dữ liệu khoa này)</span><select id="u_k_${u.id}" data-chg="ufield" data-id="${u.id}" data-k="khoa_id" class="${u.khoa_id ? "" : "invalid"}">${khoaOptions(u.khoa_id, "— Chưa gán khoa —")}</select></label>` : ""}
       <div class="row"><button class="btn sm" data-act="toggle" data-coll="nguoi_dung" data-id="${u.id}">${u.active === false ? "Mở khóa tài khoản" : "Khóa tài khoản"}</button><button class="btn sm ${conf ? "confirming" : "danger"}" data-act="rmuser" data-id="${u.id}">${conf ? "Bấm lần nữa để thu hồi" : "Thu hồi quyền"}</button></div></li>`;
   }).join("");
   return `${reqs.length ? `<section class="stack"><h3>Yêu cầu cấp quyền</h3><ul class="list">${reqHtml}</ul></section>` : ""}
   <section class="card stack"><h3>Thêm người dùng</h3>
     <label class="f"><span class="small">Tìm đồng nghiệp theo tên hoặc email</span><input type="search" id="u_search" value="${esc(S.ui.q)}" data-inp="search" autocomplete="off" placeholder="Gõ tên…"></label>
-    ${hits ? `<div class="hits">${hits}</div>` : S.ui.q ? `<p class="muted small" style="margin:0">Không tìm thấy. Người đó có thể tự mở link trang này và bấm “Gửi yêu cầu cấp quyền”.</p>` : ""}
-    <div class="notice info small">Chia sẻ trang (nút Share) cho Trưởng khoa ở mức <b>Contributor</b> để họ nhập liệu được; Ban Giám đốc chỉ cần mức <b>Viewer</b>. Người có quyền Editor/Owner là Quản trị viên.</div>
+    ${hits ? `<div class="hits">${hits}</div>` : S.ui.q ? `<p class="muted small" style="margin:0">Không tìm thấy. Người đó có thể tự mở link trang này và bấm “Gửi yêu cầu cấp quyền”, yêu cầu sẽ hiện ở đầu trang này.</p>` : ""}
+    <div class="notice info small">Cách mời: bấm <b>Share</b>, nhập email từng người. Trưởng khoa chọn <b>Editor</b> (để nhập liệu được), Ban Giám đốc chọn <b>Viewer</b>. Không bật chia sẻ bằng link công khai. Người được mời mở link, bấm “Gửi yêu cầu cấp quyền”, rồi bạn duyệt ở đây. Mức Editor chỉ cho phép nhập liệu; vai trò thật do bạn gán ở đây.</div>
   </section>
   <section class="stack"><div class="group-h"><h3>Người dùng đã cấp quyền</h3><span class="muted small">${users.length}</span></div>${rows ? `<ul class="list">${rows}</ul>` : `<div class="empty">Chưa có ai. Tìm và thêm Trưởng khoa ở ô bên trên.</div>`}</section>`;
 }
@@ -752,7 +753,7 @@ const ACT = {
     INT_KEYS.forEach((k) => { body[k] = null; });
     body.so_nb_nam_bang_ca = 0; body.so_dd_nghi_che_do = 0;
     try { await ref.set(body); S.data.phien[ref.id] = S.data.phien[ref.id] || body; go("phan1", { id: ref.id }); }
-    catch (e) { toast(e && e.code === "invalid_argument" ? "Bạn chưa được chia sẻ quyền nhập liệu (cần mức Contributor)." : "Chưa tạo được phiên, thử lại."); }
+    catch (e) { toast(e && e.code === "invalid_argument" ? "Bạn chưa có quyền nhập liệu: chủ trang cần chia sẻ cho bạn ở mức Editor." : "Chưa tạo được phiên, thử lại."); }
   },
   mark(el) {
     const { id, room, item, v } = el.dataset;
@@ -835,7 +836,7 @@ document.addEventListener("submit", async (e) => {
   } else if (kind === "request") {
     const ht = document.getElementById("req_ho_ten").value.trim(); if (!ht) return toast("Vui lòng nhập họ tên.");
     try { await S.db.doc("yeu_cau/" + S.myId).set({ ho_ten_de_nghi: ht, khoa_de_nghi: document.getElementById("req_khoa").value.trim(), thoi_gian: new Date().toISOString() }); toast("Đã gửi yêu cầu."); }
-    catch { toast("Chưa gửi được. Bạn cần được chia sẻ trang ở mức Contributor — hãy báo Quản trị viên."); }
+    catch { toast("Chưa gửi được: bạn chỉ có quyền xem. Hãy báo Quản trị viên thêm bạn trực tiếp."); }
   } else if (kind === "addKhoa") {
     const v = document.getElementById("new_khoa").value.trim(); if (!v) return;
     try { await S.db.collection("khoa").add({ ten_khoa: v, active: true }); toast("Đã thêm khoa."); render(); } catch { toast("Chưa thêm được khoa."); }
