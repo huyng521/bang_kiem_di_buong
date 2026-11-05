@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { requireUser, trangChuTheoVaiTro } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { ghiNhatKy } from "@/lib/nhat-ky";
 
 export interface DoiMatKhauState {
   loi?: string;
@@ -21,6 +22,7 @@ export async function doiMatKhau(_prev: DoiMatKhauState, formData: FormData): Pr
   if (error) {
     return { loi: error.message.includes("different") ? "Mật khẩu mới phải khác mật khẩu cũ." : "Chưa đổi được mật khẩu: " + error.message };
   }
+  await ghiNhatKy("doi_mat_khau", "tai_khoan", { id: user.nguoiDung.id });
   if (user.nguoiDung.phai_doi_mat_khau) {
     // Cờ này chỉ server (khóa quản trị) được gỡ; người dùng không tự sửa bảng nguoi_dung.
     await createAdminClient().from("nguoi_dung").update({ phai_doi_mat_khau: false }).eq("id", user.nguoiDung.id);

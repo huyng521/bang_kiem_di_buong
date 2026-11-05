@@ -183,6 +183,19 @@ export type BaoCaoTheoMucRow = {
   ty_le_dat: number | null;
 };
 
+export type AuditLog = {
+  id: number;
+  thoi_gian: string;
+  nguoi_dung_id: string | null;
+  vai_tro: VaiTro | null;
+  hanh_dong: string;
+  doi_tuong_loai: string;
+  doi_tuong_id: string | null;
+  khoa_id: string | null;
+  gia_tri_cu: Record<string, unknown> | null;
+  gia_tri_moi: Record<string, unknown> | null;
+};
+
 // Danh sách 15 field bắt buộc/không bắt buộc của Phần I, dùng để validate.
 export const PHAN_1_FIELDS_BAT_BUOC = [
   "ngay_bao_cao",
@@ -270,6 +283,12 @@ export interface Database {
         Update: Partial<CauHinhHeThong>;
         Relationships: [];
       };
+      audit_log: {
+        Row: AuditLog;
+        Insert: Partial<AuditLog>;
+        Update: Partial<AuditLog>;
+        Relationships: [];
+      };
       minh_chung_anh: {
         Row: MinhChungAnh;
         Insert: Partial<MinhChungAnh>;
@@ -285,6 +304,10 @@ export interface Database {
     };
     Views: Record<string, never>;
     Functions: {
+      ghi_nhat_ky: {
+        Args: { p_hanh_dong: string; p_doi_tuong_loai: string; p_doi_tuong_id?: string | null; p_khoa_id?: string | null; p_chi_tiet?: Record<string, unknown> | null };
+        Returns: undefined;
+      };
       bao_cao_ty_le_theo_muc: {
         Args: { p_tu: string; p_den: string; p_khoa?: string | null };
         Returns: BaoCaoTheoMucRow[];

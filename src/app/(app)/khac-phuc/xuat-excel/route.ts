@@ -4,11 +4,13 @@ import { requireUser } from "@/lib/auth";
 import { layDanhSachKhacPhuc } from "@/lib/khac-phuc-server";
 import { themSheetKhacPhuc } from "@/lib/excel-khac-phuc";
 import { homNayVN } from "@/lib/thoi-gian";
+import { ghiNhatKy } from "@/lib/nhat-ky";
 
 export async function GET(request: NextRequest) {
   const user = await requireUser();
   const loc = Object.fromEntries(request.nextUrl.searchParams.entries());
   const ds = await layDanhSachKhacPhuc(user, loc);
+  await ghiNhatKy("xuat_file", "excel_khac_phuc", { khoaId: user.nguoiDung.vai_tro === "truong_khoa" ? user.nguoiDung.khoa_id : loc.khoa ?? null, chiTiet: loc });
   const wb = new ExcelJS.Workbook();
   themSheetKhacPhuc(wb, ds);
   const buf = await wb.xlsx.writeBuffer();

@@ -5,6 +5,7 @@ import { requireRole, sinhMatKhauTam } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { VaiTro } from "@/types/database";
+import { ghiNhatKy } from "@/lib/nhat-ky";
 
 const VAI_TRO_HOP_LE: VaiTro[] = ["admin", "truong_khoa", "ban_giam_doc"];
 
@@ -33,7 +34,8 @@ export async function taoNguoiDung(_prev: KetQuaMatKhau, formData: FormData): Pr
     return { loi: trung ? "Email này đã có tài khoản." : "Không tạo được tài khoản: " + (error?.message ?? "") };
   }
 
-  const { error: dbError } = await admin.from("nguoi_dung").insert({
+  const supabase = await createClient();
+  const { error: dbError } = await supabase.from("nguoi_dung").insert({
     auth_user_id: data.user.id,
     ho_ten: hoTen,
     email,
@@ -63,7 +65,8 @@ export async function datLaiMatKhau(nguoiDungId: string): Promise<KetQuaMatKhau>
   const admin = createAdminClient();
   const { error } = await admin.auth.admin.updateUserById(hoSo.auth_user_id, { password: matKhauTam });
   if (error) return { loi: "Không đặt lại được: " + error.message };
-  await admin.from("nguoi_dung").update({ phai_doi_mat_khau: true }).eq("id", nguoiDungId);
+  await (await createClient()).from("nguoi_dung").update({ phai_doi_mat_khau: true }).eq("id", nguoiDungId);
+  await ghiNhatKy("dat_lai_mat_khau", "tai_khoan", { id: nguoiDungId, khoaId: hoSo.khoa_id });
   revalidatePath("/admin/nguoi-dung");
   return { thanhCong: `Đã đặt lại mật khẩu cho ${hoSo.ho_ten}.`, matKhauTam, email: hoSo.email ?? undefined };
 }

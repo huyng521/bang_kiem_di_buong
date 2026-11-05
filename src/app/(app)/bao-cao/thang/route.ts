@@ -4,6 +4,7 @@ import { requireUser } from "@/lib/auth";
 import { napBaoCaoThang } from "@/lib/bao-cao-thang";
 import { taoPdfBaoCaoThang } from "@/lib/pdf/bao-cao-thang-pdf";
 import { homNayVN } from "@/lib/thoi-gian";
+import { ghiNhatKy } from "@/lib/nhat-ky";
 
 export const maxDuration = 60;
 
@@ -14,6 +15,7 @@ export async function GET(request: NextRequest) {
   // Trưởng khoa luôn chỉ lấy được khoa mình (RLS cũng chặn ở database).
   const khoa = user.nguoiDung.vai_tro === "truong_khoa" ? user.nguoiDung.khoa_id : sp.get("khoa") || null;
   const b = await napBaoCaoThang(thang, khoa);
+  await ghiNhatKy("xuat_file", "bao_cao_thang", { id: thang, khoaId: khoa, chiTiet: { dinh_dang: sp.get("dinh_dang") ?? "pdf" } });
   const ten = `bao-cao-di-buong-${thang}${khoa ? "-" + b.tenKhoa.replace(/\s+/g, "-") : ""}`;
 
   if (sp.get("dinh_dang") === "xlsx") {

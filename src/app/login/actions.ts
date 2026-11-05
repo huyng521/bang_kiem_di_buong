@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { trangChuTheoVaiTro } from "@/lib/auth";
+import { ghiNhatKy } from "@/lib/nhat-ky";
 
 export interface DangNhapState {
   loi?: string;
@@ -43,6 +44,7 @@ export async function dangNhap(
     };
   }
 
+  await ghiNhatKy("dang_nhap", "tai_khoan", { id: data.user.id });
   if (nguoiDung.phai_doi_mat_khau) redirect("/doi-mat-khau");
 
   redirect(
@@ -51,6 +53,7 @@ export async function dangNhap(
 }
 
 export async function dangXuat() {
+  await ghiNhatKy("dang_xuat", "tai_khoan");
   const supabase = await createClient();
   await supabase.auth.signOut();
   redirect("/login");

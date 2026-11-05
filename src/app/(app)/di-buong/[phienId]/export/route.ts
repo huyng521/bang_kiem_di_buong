@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireRole } from "@/lib/auth";
 import { getPhienOrNotFound } from "@/lib/phien";
 import { xuatExcelPhien } from "@/lib/excel";
+import { ghiNhatKy } from "@/lib/nhat-ky";
 
 export async function GET(
   _request: Request,
@@ -12,6 +13,7 @@ export async function GET(
   const phien = await getPhienOrNotFound(phienId, user);
 
   const buffer = await xuatExcelPhien(phien.id);
+  await ghiNhatKy("xuat_file", "excel_phien", { id: phien.id, khoaId: phien.khoa_id });
   const tenFile = `bang-kiem-di-buong-${phien.ngay_bao_cao}.xlsx`;
 
   return new NextResponse(new Uint8Array(buffer), {
