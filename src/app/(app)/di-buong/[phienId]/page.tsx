@@ -4,6 +4,7 @@ import { requireRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { getPhienOrNotFound, phan1DaDayDu, layDanhSachPhongTheoTienDo, phienCoTheSua } from "@/lib/phien";
 import { hienNgay } from "@/lib/thoi-gian";
+import { ThuVienAnhPhien } from "@/components/thu-vien-anh-phien";
 
 export default async function TongQuanPhienPage({
   params,
@@ -86,6 +87,8 @@ export default async function TongQuanPhienPage({
           ⬇ Xuất Excel
         </a>
       </div>
+
+      <ThuVienAnhPhien phienId={phien.id} />
 
       {(phien.y_kien_van_de_nguoi_benh || phien.bien_phap_khac_phuc) && (
         <div className="space-y-2 rounded-xl border border-slate-200 bg-white p-4 text-sm shadow-sm">

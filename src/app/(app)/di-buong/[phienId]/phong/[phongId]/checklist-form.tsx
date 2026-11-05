@@ -3,7 +3,8 @@
 import { useState, useTransition } from "react";
 import type { TrangThaiKq } from "@/types/database";
 import { TIEU_CHI_DANH_GIA } from "@/lib/checklist-constants";
-import { chamMucKiemTra } from "./actions";
+import { chamMucKiemTra, chuanBiTaiAnh, ghiNhanAnhKetQua, xoaAnh } from "./actions";
+import { KhungAnh, type AnhNho } from "@/components/khung-anh";
 
 interface MucItem {
   id: string;
@@ -11,6 +12,7 @@ interface MucItem {
   noiDung: string;
   ghiChuHuongDan: string | null;
   ketQuaBanDau: { trang_thai: TrangThaiKq | null; ghi_chu: string | null } | null;
+  anh: AnhNho[];
 }
 
 const NUT_TRANG_THAI: { value: TrangThaiKq; nhan: string; active: string; idle: string }[] = [
@@ -65,6 +67,7 @@ function MucRow({
   const [hienGhiChu, setHienGhiChu] = useState(Boolean(item.ketQuaBanDau?.ghi_chu));
   const [dangLuu, startTransition] = useTransition();
   const [loi, setLoi] = useState<string | null>(null);
+  const [hienAnh, setHienAnh] = useState(item.anh.length > 0);
 
   function chon(gt: TrangThaiKq) {
     if (readOnly) return;
@@ -136,9 +139,30 @@ function MucRow({
           onChange={(e) => setGhiChu(e.target.value)}
           onBlur={luuGhiChu}
           rows={2}
-          placeholder="Ghi chú riêng cho mục này (không bắt buộc)"
+          placeholder="Ghi chú (không ghi tên/mã người bệnh)"
           className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm disabled:bg-slate-50"
         />
+      )}
+
+      {(!readOnly || item.anh.length > 0) && (
+        <button
+          type="button"
+          onClick={() => setHienAnh((v) => !v)}
+          className={`ml-3 mt-2 text-xs ${trangThai === "khong_dat" ? "font-semibold text-red-700" : "text-blue-600"}`}
+        >
+          {hienAnh ? "Ẩn ảnh" : `📷 Ảnh minh chứng${item.anh.length ? ` (${item.anh.length})` : trangThai === "khong_dat" ? " — nên chụp" : ""}`}
+        </button>
+      )}
+      {hienAnh && (
+        <div className="mt-2">
+          <KhungAnh
+            ban={item.anh}
+            choSua={!readOnly}
+            chuanBi={chuanBiTaiAnh.bind(null, phienId)}
+            ghiNhan={ghiNhanAnhKetQua.bind(null, phienId, phienKiemTraPhongId, item.id)}
+            xoa={xoaAnh.bind(null, phienId)}
+          />
+        </div>
       )}
 
       {dangLuu && <p className="mt-1 text-xs text-slate-400">Đang lưu...</p>}

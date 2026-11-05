@@ -103,6 +103,21 @@ export type KetQuaKiemTra = {
   ghi_chu: string | null;
 };
 
+export type MinhChungAnh = {
+  id: string;
+  ket_qua_kiem_tra_id: string | null;
+  hanh_dong_khac_phuc_id: string | null;
+  loai: "kiem_tra" | "khac_phuc";
+  storage_path: string;
+  ten_file: string | null;
+  kich_thuoc_byte: number | null;
+  nguoi_tai_len_id: string | null;
+  thoi_gian_tai_len: string;
+  ghi_chu: string | null;
+  khoa_id: string;
+  phien_kiem_tra_id: string | null;
+};
+
 // Danh sách 15 field bắt buộc/không bắt buộc của Phần I, dùng để validate.
 export const PHAN_1_FIELDS_BAT_BUOC = [
   "ngay_bao_cao",
@@ -158,6 +173,12 @@ export interface Database {
         Row: PhienKiemTraPhong;
         Insert: Partial<PhienKiemTraPhong>;
         Update: Partial<PhienKiemTraPhong>;
+        Relationships: [];
+      };
+      minh_chung_anh: {
+        Row: MinhChungAnh;
+        Insert: Partial<MinhChungAnh>;
+        Update: Partial<MinhChungAnh>;
         Relationships: [];
       };
       ket_qua_kiem_tra: {

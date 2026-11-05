@@ -4,6 +4,7 @@ import { requireRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { getPhienOrNotFound, layHoacTaoPhienKiemTraPhong, phienCoTheSua } from "@/lib/phien";
 import { ChecklistForm } from "./checklist-form";
+import { kyDuongDanAnh } from "@/lib/anh-server";
 
 export default async function ChecklistPhongPage({
   params,
@@ -33,10 +34,25 @@ export default async function ChecklistPhongPage({
 
   const { data: ketQua } = await supabase
     .from("ket_qua_kiem_tra")
-    .select("checklist_item_id, trang_thai, ghi_chu")
+    .select("id, checklist_item_id, trang_thai, ghi_chu")
     .eq("phien_kiem_tra_phong_id", phienKiemTraPhong.id);
 
   const ketQuaTheoMuc = new Map((ketQua ?? []).map((k) => [k.checklist_item_id, k]));
+  const idsKetQua = (ketQua ?? []).map((k) => k.id);
+  const { data: dongAnh } = idsKetQua.length
+    ? await supabase
+        .from("minh_chung_anh")
+        .select("id, storage_path, ket_qua_kiem_tra_id, hanh_dong_khac_phuc_id, loai")
+        .in("ket_qua_kiem_tra_id", idsKetQua)
+        .order("thoi_gian_tai_len")
+    : { data: [] };
+  const anh = await kyDuongDanAnh(dongAnh ?? []);
+  const itemTheoKetQua = new Map((ketQua ?? []).map((k) => [k.id, k.checklist_item_id]));
+  const anhTheoMuc = new Map<string, { id: string; url: string }[]>();
+  for (const a of anh) {
+    const muc = itemTheoKetQua.get(a.ket_qua_kiem_tra_id ?? "");
+    if (muc) anhTheoMuc.set(muc, [...(anhTheoMuc.get(muc) ?? []), { id: a.id, url: a.url }]);
+  }
   const chiXem = !phienCoTheSua(phien, user.nguoiDung.vai_tro);
 
   return (
@@ -59,6 +75,7 @@ export default async function ChecklistPhongPage({
           noiDung: m.noi_dung,
           ghiChuHuongDan: m.ghi_chu_huong_dan,
           ketQuaBanDau: ketQuaTheoMuc.get(m.id) ?? null,
+          anh: anhTheoMuc.get(m.id) ?? [],
         }))}
       />
     </div>

@@ -16,9 +16,14 @@ export async function taoDb(): Promise<PGlite> {
     create function auth.uid() returns uuid language sql stable as $$
       select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid
     $$;
+    -- Giả lập phần Supabase Storage mà migration dùng tới.
+    create schema storage;
+    create table storage.buckets (id text primary key, name text, public boolean, file_size_limit bigint, allowed_mime_types text[]);
+    create table storage.objects (id uuid primary key default gen_random_uuid(), bucket_id text, name text, owner uuid);
+    alter table storage.objects enable row level security;
     create role authenticated nologin;
     create role anon nologin;
-    grant usage on schema public, auth to authenticated, anon;
+    grant usage on schema public, auth, storage to authenticated, anon;
     grant execute on function auth.uid() to authenticated, anon;
   `);
   for (const f of readdirSync(MIGRATIONS).filter((x) => x.endsWith(".sql")).sort()) {
@@ -27,6 +32,7 @@ export async function taoDb(): Promise<PGlite> {
   // Supabase mặc định cấp quyền bảng cho role authenticated; RLS mới là lớp chặn thật.
   await db.exec(`
     grant all on all tables in schema public to authenticated;
+    grant all on all tables in schema storage to authenticated;
     grant execute on all functions in schema public to authenticated;
   `);
   return db;
