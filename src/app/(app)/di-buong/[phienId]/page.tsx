@@ -94,6 +94,10 @@ export default async function TongQuanPhienPage({
         >
           ⬇ Xuất Excel
         </a>
+        <div className="grid grid-cols-2 gap-2">
+          <a href={`/di-buong/${phienId}/pdf`} target="_blank" rel="noreferrer" className="rounded-xl border border-blue-300 bg-blue-50 px-3 py-3 text-center text-sm font-semibold text-blue-700">⬇ Xuất PDF</a>
+          <a href={`/di-buong/${phienId}/pdf?anh=1`} target="_blank" rel="noreferrer" className="rounded-xl border border-blue-300 bg-blue-50 px-3 py-3 text-center text-sm font-semibold text-blue-700">⬇ PDF kèm phụ lục ảnh</a>
+        </div>
       </div>
 
       <ThuVienAnhPhien phienId={phien.id} />

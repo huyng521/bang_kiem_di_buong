@@ -14,6 +14,7 @@ export type Khoa = {
   id: string;
   ten_khoa: string;
   active: boolean;
+  so_giuong_ke_hoach: number | null;
   created_at: string;
 };
 
@@ -162,6 +163,26 @@ export type ThongKeKhacPhucRow = {
   tb_ngay_khac_phuc: number | null;
 };
 
+export type CauHinhHeThong = {
+  id: number;
+  ten_benh_vien: string;
+  ten_don_vi_quan_ly: string;
+  logo_path: string | null;
+  muc_tieu_ty_le_dat: number;
+  ngay_di_buong: number[];
+  gio_nhac_chua_di_buong: string;
+  updated_at: string;
+};
+export type BaoCaoTheoMucRow = {
+  checklist_item_id: string;
+  stt: number;
+  noi_dung: string;
+  so_dat: number;
+  so_khong_dat: number;
+  so_bo_chuan: number;
+  ty_le_dat: number | null;
+};
+
 // Danh sách 15 field bắt buộc/không bắt buộc của Phần I, dùng để validate.
 export const PHAN_1_FIELDS_BAT_BUOC = [
   "ngay_bao_cao",
@@ -243,6 +264,12 @@ export interface Database {
         Update: Partial<HanhDongKhacPhucLichSu>;
         Relationships: [];
       };
+      cau_hinh_he_thong: {
+        Row: CauHinhHeThong;
+        Insert: Partial<CauHinhHeThong>;
+        Update: Partial<CauHinhHeThong>;
+        Relationships: [];
+      };
       minh_chung_anh: {
         Row: MinhChungAnh;
         Insert: Partial<MinhChungAnh>;
@@ -258,6 +285,10 @@ export interface Database {
     };
     Views: Record<string, never>;
     Functions: {
+      bao_cao_ty_le_theo_muc: {
+        Args: { p_tu: string; p_den: string; p_khoa?: string | null };
+        Returns: BaoCaoTheoMucRow[];
+      };
       thong_ke_khac_phuc: {
         Args: { p_tu: string; p_den: string };
         Returns: ThongKeKhacPhucRow[];

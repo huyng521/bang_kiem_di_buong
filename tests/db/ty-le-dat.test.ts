@@ -67,3 +67,23 @@ describe("bao_cao_ty_le_dat", () => {
     });
   });
 });
+
+describe("view v_ket_qua_tinh_ty_le + bao_cao_ty_le_theo_muc (công thức dùng chung)", () => {
+  it("tỷ lệ từng mục: mục 1 = 1 đạt/2 áp dụng = 50%, bỏ chuẩn không tính", async () => {
+    await roiHoanTac(db, async () => {
+      const m1 = await mucTheoStt(db, 1);
+      await db.query(`insert into phien_kiem_tra_phong (phien_kiem_tra_id, phong_benh_id) values ($1, $2)`, [ID.phienB, ID.phongA1]).catch(() => {});
+      await cham(ID.pktpB, ["dat_co", "khong_co_bo_chuan"]);
+      const pk2 = (await db.query<{ id: string }>(`select id from phien_kiem_tra_phong where phien_kiem_tra_id = $1 and id <> $2`, [ID.phienB, ID.pktpB])).rows[0]?.id;
+      if (pk2) await db.query(`insert into ket_qua_kiem_tra (phien_kiem_tra_phong_id, checklist_item_id, trang_thai) values ($1,$2,'khong_dat')`, [pk2, m1]);
+      const rows = (await db.query<{ stt: number; ty_le_dat: string | null }>(`select * from bao_cao_ty_le_theo_muc('2026-11-01', '2026-11-30')`)).rows;
+      expect(Number(rows.find((r) => r.stt === 1)!.ty_le_dat)).toBe(50);
+      expect(rows.find((r) => r.stt === 2)!.ty_le_dat).toBeNull();
+    });
+  });
+  it("hàm ty_le_dat: mẫu số 0 → trống", async () => {
+    const r = await db.query<{ a: string | null; b: string }>(`select ty_le_dat(0, 0) a, ty_le_dat(2, 3) b`);
+    expect(r.rows[0].a).toBeNull();
+    expect(Number(r.rows[0].b)).toBe(66.7);
+  });
+});

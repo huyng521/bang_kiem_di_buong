@@ -38,6 +38,16 @@ export default async function KhoaPage() {
                 defaultValue={k.ten_khoa}
                 className="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm"
               />
+              <input
+                type="number"
+                inputMode="numeric"
+                min={0}
+                name="so_giuong_ke_hoach"
+                defaultValue={k.so_giuong_ke_hoach ?? ""}
+                placeholder="Số giường"
+                title="Tổng số giường kế hoạch (không bắt buộc, để tính công suất)"
+                className="w-24 rounded-lg border border-slate-300 px-2 py-2 text-sm"
+              />
               <button type="submit" className="rounded-lg border border-slate-300 px-3 py-2 text-xs font-medium text-slate-600">
                 Lưu
               </button>

@@ -12,13 +12,14 @@ export default async function BaoCaoPage({
 }: {
   searchParams: Promise<{ tu_ngay?: string; den_ngay?: string }>;
 }) {
-  await requireRole("admin", "ban_giam_doc", "truong_khoa");
+  const user = await requireRole("admin", "ban_giam_doc", "truong_khoa");
   const { tu_ngay, den_ngay } = await searchParams;
   const macDinh = ngayMacDinh();
   const tuNgay = tu_ngay || macDinh.tu;
   const denNgay = den_ngay || macDinh.den;
 
   const supabase = await createClient();
+  const { data: dsKhoa } = await supabase.from("khoa").select("id, ten_khoa").eq("active", true).order("ten_khoa");
   const { data: baoCao, error } = await supabase.rpc("bao_cao_ty_le_dat", {
     p_tu_ngay: tuNgay,
     p_den_ngay: denNgay,
@@ -49,6 +50,19 @@ export default async function BaoCaoPage({
         <button type="submit" className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-600">
           Lọc
         </button>
+      </form>
+
+      <form action="/bao-cao/thang" method="get" target="_blank" className="flex flex-wrap items-end gap-2 rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+        <p className="w-full text-sm font-semibold text-slate-700">Báo cáo tổng hợp theo tháng</p>
+        <input type="month" name="thang" defaultValue={denNgay.slice(0, 7)} className="rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+        {user.nguoiDung.vai_tro !== "truong_khoa" && (
+          <select name="khoa" className="rounded-lg border border-slate-300 px-3 py-2 text-sm">
+            <option value="">Toàn viện</option>
+            {(dsKhoa ?? []).map((k) => <option key={k.id} value={k.id}>{k.ten_khoa}</option>)}
+          </select>
+        )}
+        <button name="dinh_dang" value="pdf" className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white">PDF</button>
+        <button name="dinh_dang" value="xlsx" className="rounded-lg border border-blue-300 bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-700">Excel</button>
       </form>
 
       {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error.message}</p>}

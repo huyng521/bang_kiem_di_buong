@@ -1,180 +1,122 @@
 import "server-only";
 import ExcelJS from "exceljs";
-import { createClient } from "@/lib/supabase/server";
+import { KY_HIEU, khoaKq, napDuLieuPhien } from "@/lib/du-lieu-phien";
+import { themSheetKhacPhuc } from "@/lib/excel-khac-phuc";
+import { hienNgay, hienNgayGio } from "@/lib/thoi-gian";
 import type { TrangThaiKq } from "@/types/database";
 
-const NHAN_TRANG_THAI: Record<TrangThaiKq, string> = {
-  dat_co: "Đạt",
-  khong_dat: "Không đạt",
-  khong_co_bo_chuan: "Không có/BC",
-};
+const NHAN: Record<TrangThaiKq, string> = { dat_co: "Đạt", khong_dat: "Không đạt", khong_co_bo_chuan: "Không có/BC" };
+const NEN: Record<TrangThaiKq, string> = { dat_co: "FFC6EFCE", khong_dat: "FFFFC7CE", khong_co_bo_chuan: "FFE7E6E6" };
 
-const MAU_NEN: Record<TrangThaiKq, string> = {
-  dat_co: "FFC6EFCE",
-  khong_dat: "FFFFC7CE",
-  khong_co_bo_chuan: "FFE7E6E6",
-};
-
+/** Excel một phiên: Phần I + ma trận phòng × mục (đúng phiên bản bảng kiểm của phiên) + sheet khắc phục. */
 export async function xuatExcelPhien(phienId: string): Promise<Buffer> {
-  const supabase = await createClient();
-
-  const { data: phien } = await supabase.from("phien_kiem_tra").select("*").eq("id", phienId).single();
-  if (!phien) throw new Error("Không tìm thấy phiên kiểm tra.");
-
-  const [{ data: khoa }, { data: nguoiKiemTra }, { data: dsPhongKiemTra }, { data: mucKiemTra }] =
-    await Promise.all([
-      supabase.from("khoa").select("ten_khoa").eq("id", phien.khoa_id).maybeSingle(),
-      supabase.from("nguoi_dung").select("ho_ten").eq("id", phien.nguoi_kiem_tra_id).maybeSingle(),
-      supabase
-        .from("phien_kiem_tra_phong")
-        .select("id, phong_benh_id, ten_dd_phu_trach, tong_so_nguoi_benh")
-        .eq("phien_kiem_tra_id", phienId),
-      supabase
-        .from("checklist_item")
-        .select("id, stt, noi_dung")
-        .eq("checklist_version_id", phien.checklist_version_id)
-        .eq("active", true)
-        .order("stt"),
-    ]);
-
-  const idsPhongBenh = (dsPhongKiemTra ?? []).map((p) => p.phong_benh_id);
-  const { data: dsPhongBenh } = idsPhongBenh.length
-    ? await supabase.from("phong_benh").select("id, so_phong").in("id", idsPhongBenh)
-    : { data: [] as { id: string; so_phong: string }[] };
-  const soPhongTheoId = new Map((dsPhongBenh ?? []).map((p) => [p.id, p.so_phong]));
-
-  const dsPhongPhien = (dsPhongKiemTra ?? [])
-    .map((p) => ({ ...p, so_phong: soPhongTheoId.get(p.phong_benh_id) ?? "" }))
-    .sort((a, b) => a.so_phong.localeCompare(b.so_phong));
-
-  const idsPhienPhong = dsPhongPhien.map((p) => p.id);
-  const { data: dsKetQua } = idsPhienPhong.length
-    ? await supabase
-        .from("ket_qua_kiem_tra")
-        .select("phien_kiem_tra_phong_id, checklist_item_id, trang_thai, ghi_chu")
-        .in("phien_kiem_tra_phong_id", idsPhienPhong)
-    : { data: [] as { phien_kiem_tra_phong_id: string; checklist_item_id: string; trang_thai: TrangThaiKq | null; ghi_chu: string | null }[] };
-
-  const ketQuaTheoKhoa = new Map<string, { trang_thai: TrangThaiKq | null; ghi_chu: string | null }>();
-  for (const kq of dsKetQua ?? []) {
-    ketQuaTheoKhoa.set(`${kq.phien_kiem_tra_phong_id}:${kq.checklist_item_id}`, kq);
-  }
-
-  const workbook = new ExcelJS.Workbook();
-  workbook.creator = "Bảng kiểm đi buồng";
-  workbook.created = new Date();
-  const sheet = workbook.addWorksheet("Bảng kiểm đi buồng", {
-    views: [{ state: "frozen", ySplit: 0 }],
-  });
-
-  const tieuDeStyle: Partial<ExcelJS.Style> = {
-    font: { bold: true, size: 14 },
+  const d = await napDuLieuPhien(phienId);
+  const wb = new ExcelJS.Workbook();
+  wb.creator = d.cauHinh?.ten_don_vi_quan_ly || "Bảng kiểm đi buồng";
+  const ws = wb.addWorksheet("Bảng kiểm đi buồng", { pageSetup: { orientation: "landscape", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0 } });
+  const thin = { style: "thin" as const, color: { argb: "FF9AA9AB" } };
+  const box = { top: thin, left: thin, bottom: thin, right: thin };
+  const cuoi = Math.max(3, 2 + d.phong.length);
+  let r = 1;
+  const dongTieuDe = (text: string, opts: Partial<ExcelJS.Style> = {}) => {
+    ws.mergeCells(r, 1, r, cuoi);
+    ws.getCell(r, 1).value = text;
+    Object.assign(ws.getCell(r, 1), { style: { alignment: { horizontal: "center" }, ...opts } });
+    r++;
   };
-  const nhanStyle: Partial<ExcelJS.Style> = { font: { bold: true } };
+  if (d.cauHinh?.ten_benh_vien) dongTieuDe(d.cauHinh.ten_benh_vien.toUpperCase(), { font: { bold: true } });
+  dongTieuDe(d.cauHinh?.ten_don_vi_quan_ly || "Phòng Điều dưỡng");
+  dongTieuDe("BẢNG KIỂM ĐI BUỒNG CỦA ĐIỀU DƯỠNG/HỘ SINH TRƯỞNG KHOA", { font: { bold: true, size: 14 } });
+  dongTieuDe(`${d.tenKhoa} — Ngày ${hienNgay(d.phien.ngay_bao_cao)}${d.phienBan.ten ? ` — Bảng kiểm: ${d.phienBan.ten}` : ""}`);
+  r++;
 
-  let hang = 1;
-  sheet.getCell(hang, 1).value = "BẢNG KIỂM ĐI BUỒNG";
-  sheet.getCell(hang, 1).style = tieuDeStyle;
-  hang += 2;
-
+  ws.getCell(r++, 1).value = "PHẦN I: TỔNG QUAN HÀNH CHÍNH";
+  ws.getCell(r - 1, 1).font = { bold: true };
+  const p = d.phien;
   const phanI: [string, string | number][] = [
-    ["Khoa", khoa?.ten_khoa ?? ""],
-    ["Ngày báo cáo", new Date(phien.ngay_bao_cao).toLocaleDateString("vi-VN")],
-    ["Họ và tên người báo cáo", nguoiKiemTra?.ho_ten ?? ""],
-    ["ĐD được ĐDTK ủy quyền khi vắng mặt", phien.dd_uy_quyen_khi_vang_mat ?? ""],
-    ["Tổng số người bệnh hiện có thực tế tại khoa", phien.tong_so_nb_thuc_te ?? ""],
-    ["Số người bệnh phân cấp chăm sóc cấp 1", phien.so_nb_cap_1 ?? ""],
-    ["Số người bệnh phân cấp chăm sóc cấp 2", phien.so_nb_cap_2 ?? ""],
-    ["Số người bệnh phân cấp chăm sóc cấp 3", phien.so_nb_cap_3 ?? ""],
-    ["Số giường dịch vụ còn trống", phien.so_giuong_dv_trong ?? ""],
-    ["Số giường thường còn trống", phien.so_giuong_thuong_trong ?? ""],
-    ["Số người bệnh đang nằm băng ca", phien.so_nb_nam_bang_ca],
-    ["Tổng số ĐD/HS cơ hữu của khoa", phien.tong_so_dd_co_huu ?? ""],
-    ["Số ĐD/HS đang công tác trong ngày", phien.so_dd_dang_cong_tac_trong_ngay ?? ""],
-    ["Số ĐD/HS ra trực", phien.so_dd_ra_truc ?? ""],
-    ["Số ĐD/HS nghỉ bù - nghỉ phép", phien.so_dd_nghi_bu_nghi_phep ?? ""],
-    ["Số ĐD/HS đang nghỉ theo chế độ", phien.so_dd_nghi_che_do],
+    ["Ngày báo cáo", hienNgay(p.ngay_bao_cao)], ["Họ và tên người báo cáo", d.nguoiBaoCao],
+    ["ĐD được ĐDTK ủy quyền khi vắng mặt", p.dd_uy_quyen_khi_vang_mat ?? ""],
+    ["Tổng số người bệnh hiện có thực tế tại khoa", p.tong_so_nb_thuc_te ?? ""],
+    ["Số người bệnh phân cấp chăm sóc cấp 1", p.so_nb_cap_1 ?? ""], ["Số người bệnh phân cấp chăm sóc cấp 2", p.so_nb_cap_2 ?? ""],
+    ["Số người bệnh phân cấp chăm sóc cấp 3", p.so_nb_cap_3 ?? ""], ["Số giường dịch vụ còn trống", p.so_giuong_dv_trong ?? ""],
+    ["Số giường thường còn trống", p.so_giuong_thuong_trong ?? ""], ["Số người bệnh đang nằm băng ca", p.so_nb_nam_bang_ca],
+    ["Tổng số ĐD/HS cơ hữu của khoa", p.tong_so_dd_co_huu ?? ""], ["Số ĐD/HS đang công tác trong ngày", p.so_dd_dang_cong_tac_trong_ngay ?? ""],
+    ["Số ĐD/HS ra trực", p.so_dd_ra_truc ?? ""], ["Số ĐD/HS nghỉ bù - nghỉ phép", p.so_dd_nghi_bu_nghi_phep ?? ""],
+    ["Số ĐD/HS đang nghỉ theo chế độ", p.so_dd_nghi_che_do],
   ];
+  phanI.forEach(([nhan, gt], i) => {
+    ws.getCell(r, 1).value = i + 1;
+    ws.mergeCells(r, 2, r, Math.max(2, cuoi - 1));
+    ws.getCell(r, 2).value = nhan;
+    ws.getCell(r, cuoi).value = gt;
+    ws.getCell(r, cuoi).font = { bold: true };
+    for (let c = 1; c <= cuoi; c++) ws.getCell(r, c).border = box;
+    r++;
+  });
+  r++;
 
-  for (const [nhan, giaTri] of phanI) {
-    sheet.getCell(hang, 1).value = nhan;
-    sheet.getCell(hang, 1).style = nhanStyle;
-    sheet.getCell(hang, 2).value = giaTri;
-    hang++;
+  ws.getCell(r++, 1).value = `PHẦN II: NỘI DUNG KIỂM TRA (${d.muc.length} mục)`;
+  ws.getCell(r - 1, 1).font = { bold: true };
+  ["STT", "Nội dung kiểm tra", ...d.phong.map((x) => x.soPhong)].forEach((h, i) => {
+    const c = ws.getCell(r, i + 1);
+    c.value = h;
+    c.style = { font: { bold: true }, border: box, alignment: { horizontal: "center", vertical: "middle", wrapText: true }, fill: { type: "pattern", pattern: "solid", fgColor: { argb: "FFDCEFEF" } } };
+  });
+  ws.views = [{ state: "frozen", ySplit: r, xSplit: 2 }];
+  r++;
+  for (const [nhan, lay] of [["Tên ĐD phụ trách", (x: (typeof d.phong)[number]) => x.tenDd ?? ""], ["Tổng số người bệnh", (x: (typeof d.phong)[number]) => x.tongNb ?? ""]] as const) {
+    ws.getCell(r, 2).value = nhan;
+    ws.getCell(r, 2).font = { italic: true };
+    d.phong.forEach((x, i) => { ws.getCell(r, 3 + i).value = lay(x); ws.getCell(r, 3 + i).alignment = { horizontal: "center", wrapText: true }; });
+    for (let c = 1; c <= cuoi; c++) ws.getCell(r, c).border = box;
+    r++;
   }
-  hang += 1;
-
-  // Bảng ma trận: cột = phòng, hàng = các mục của phiên bản bảng kiểm
-  const hangTieuDeMaTran = hang;
-  sheet.getCell(hangTieuDeMaTran, 1).value = "STT";
-  sheet.getCell(hangTieuDeMaTran, 1).style = nhanStyle;
-  sheet.getCell(hangTieuDeMaTran, 2).value = "Nội dung kiểm tra";
-  sheet.getCell(hangTieuDeMaTran, 2).style = nhanStyle;
-  dsPhongPhien.forEach((p, idx) => {
-    const cell = sheet.getCell(hangTieuDeMaTran, 3 + idx);
-    cell.value = p.so_phong;
-    cell.style = nhanStyle;
-  });
-  hang++;
-
-  const hangTdd = hang;
-  sheet.getCell(hangTdd, 2).value = "ĐD phụ trách / Tổng số NB";
-  sheet.getCell(hangTdd, 2).style = { font: { italic: true } };
-  dsPhongPhien.forEach((p, idx) => {
-    sheet.getCell(hangTdd, 3 + idx).value = `${p.ten_dd_phu_trach ?? "—"} / ${p.tong_so_nguoi_benh ?? "—"}`;
-  });
-  hang++;
-
-  const ghiChuList: string[] = [];
-
-  for (const muc of mucKiemTra ?? []) {
-    sheet.getCell(hang, 1).value = muc.stt;
-    sheet.getCell(hang, 2).value = muc.noi_dung;
-    sheet.getCell(hang, 2).alignment = { wrapText: true, vertical: "top" };
-
-    dsPhongPhien.forEach((p, idx) => {
-      const kq = ketQuaTheoKhoa.get(`${p.id}:${muc.id}`);
-      const cell = sheet.getCell(hang, 3 + idx);
-      if (kq?.trang_thai) {
-        cell.value = NHAN_TRANG_THAI[kq.trang_thai];
-        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: MAU_NEN[kq.trang_thai] } };
-      } else {
-        cell.value = "";
+  const ghiChu: string[] = [];
+  const dem = d.phong.map(() => ({ dat: 0, khong: 0 }));
+  for (const m of d.muc) {
+    ws.getCell(r, 1).value = m.stt;
+    ws.getCell(r, 2).value = m.noiDung + (m.ghiChuHuongDan ? ` (${m.ghiChuHuongDan})` : "");
+    ws.getCell(r, 2).alignment = { wrapText: true, vertical: "top" };
+    d.phong.forEach((x, i) => {
+      const k = d.ketQua.get(khoaKq(x.pktpId, m.id));
+      const c = ws.getCell(r, 3 + i);
+      if (k?.trangThai) {
+        c.value = `${KY_HIEU[k.trangThai]} — ${NHAN[k.trangThai]}`;
+        c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: NEN[k.trangThai] } };
+        if (k.trangThai === "dat_co") dem[i].dat++;
+        if (k.trangThai === "khong_dat") dem[i].khong++;
       }
-      cell.alignment = { horizontal: "center", vertical: "top" };
-      if (kq?.ghi_chu) {
-        ghiChuList.push(`${p.so_phong} - Mục ${muc.stt}: ${kq.ghi_chu}`);
-      }
+      c.alignment = { horizontal: "center", vertical: "top", wrapText: true };
+      if (k?.ghiChu) ghiChu.push(`${x.soPhong} – Mục ${m.stt}: ${k.ghiChu}`);
     });
-    hang++;
+    for (let c = 1; c <= cuoi; c++) ws.getCell(r, c).border = box;
+    r++;
   }
-
-  hang += 1;
-  if (ghiChuList.length > 0) {
-    sheet.getCell(hang, 1).value = "Ghi chú theo mục";
-    sheet.getCell(hang, 1).style = nhanStyle;
-    hang++;
-    for (const gc of ghiChuList) {
-      sheet.getCell(hang, 1).value = gc;
-      hang++;
-    }
-    hang += 1;
+  ws.getCell(r, 2).value = "Tỷ lệ đạt (loại trừ Không có/Bỏ chuẩn)";
+  ws.getCell(r, 2).font = { bold: true };
+  dem.forEach((t, i) => { const c = ws.getCell(r, 3 + i); c.value = t.dat + t.khong ? `${((t.dat / (t.dat + t.khong)) * 100).toFixed(1)}%` : "—"; c.font = { bold: true }; c.alignment = { horizontal: "center" }; });
+  for (let c = 1; c <= cuoi; c++) ws.getCell(r, c).border = box;
+  r += 2;
+  if (ghiChu.length) {
+    ws.getCell(r++, 1).value = "Ghi chú theo mục";
+    for (const g of ghiChu) { ws.mergeCells(r, 1, r, cuoi); ws.getCell(r++, 1).value = g; }
+    r++;
   }
+  for (const [nhan, gt] of [["Ý kiến/vấn đề của người bệnh", p.y_kien_van_de_nguoi_benh], ["Biện pháp khắc phục", p.bien_phap_khac_phuc]] as const) {
+    ws.getCell(r++, 1).value = nhan;
+    ws.getCell(r - 1, 1).font = { bold: true };
+    ws.mergeCells(r, 1, r, cuoi);
+    ws.getCell(r, 1).value = gt ?? "";
+    ws.getCell(r, 1).alignment = { wrapText: true, vertical: "top" };
+    ws.getRow(r).height = 45;
+    r += 2;
+  }
+  ws.getCell(r, 1).value = `Xuất lúc ${hienNgayGio(new Date().toISOString())}`;
+  ws.getCell(r, 1).font = { italic: true, color: { argb: "FF5A6F72" } };
+  ws.getColumn(1).width = 6;
+  ws.getColumn(2).width = 58;
+  d.phong.forEach((_, i) => { ws.getColumn(3 + i).width = 14; });
 
-  sheet.getCell(hang, 1).value = "Ý kiến/vấn đề của người bệnh";
-  sheet.getCell(hang, 1).style = nhanStyle;
-  sheet.getCell(hang, 2).value = phien.y_kien_van_de_nguoi_benh ?? "";
-  hang++;
-  sheet.getCell(hang, 1).value = "Biện pháp khắc phục";
-  sheet.getCell(hang, 1).style = nhanStyle;
-  sheet.getCell(hang, 2).value = phien.bien_phap_khac_phuc ?? "";
-
-  sheet.getColumn(1).width = 6;
-  sheet.getColumn(2).width = 48;
-  dsPhongPhien.forEach((_, idx) => {
-    sheet.getColumn(3 + idx).width = 16;
-  });
-
-  const arrayBuffer = await workbook.xlsx.writeBuffer();
-  return Buffer.from(arrayBuffer);
+  themSheetKhacPhuc(wb, d.khacPhuc);
+  return Buffer.from(await wb.xlsx.writeBuffer());
 }

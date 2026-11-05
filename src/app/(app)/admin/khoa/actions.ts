@@ -19,8 +19,13 @@ export async function suaKhoa(khoaId: string, formData: FormData) {
   const tenKhoa = String(formData.get("ten_khoa") ?? "").trim();
   if (!tenKhoa) return;
 
+  const giuongRaw = String(formData.get("so_giuong_ke_hoach") ?? "").trim();
+  const soGiuong = giuongRaw === "" ? null : Number(giuongRaw);
   const supabase = await createClient();
-  await supabase.from("khoa").update({ ten_khoa: tenKhoa }).eq("id", khoaId);
+  await supabase
+    .from("khoa")
+    .update({ ten_khoa: tenKhoa, so_giuong_ke_hoach: soGiuong !== null && Number.isInteger(soGiuong) && soGiuong >= 0 ? soGiuong : null })
+    .eq("id", khoaId);
   revalidatePath("/admin/khoa");
 }
 
