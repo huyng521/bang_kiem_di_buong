@@ -8,7 +8,7 @@ export async function GET(
   { params }: { params: Promise<{ phienId: string }> }
 ) {
   const { phienId } = await params;
-  const user = await requireRole("truong_khoa", "admin");
+  const user = await requireRole("truong_khoa", "admin", "ban_giam_doc");
   const phien = await getPhienOrNotFound(phienId, user);
 
   const buffer = await xuatExcelPhien(phien.id);

@@ -2,13 +2,14 @@ import Link from "next/link";
 import { requireRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { batDauDiBuong } from "./actions";
+import { hienGio, hienNgay } from "@/lib/thoi-gian";
 
 export default async function DiBuongPage({
   searchParams,
 }: {
   searchParams: Promise<{ tu_ngay?: string; den_ngay?: string }>;
 }) {
-  const user = await requireRole("truong_khoa", "admin");
+  const user = await requireRole("truong_khoa", "admin", "ban_giam_doc");
   const { tu_ngay, den_ngay } = await searchParams;
   const supabase = await createClient();
 
@@ -28,7 +29,7 @@ export default async function DiBuongPage({
   const { data: danhSach } = await query;
 
   const tenKhoaTheoId = new Map<string, string>();
-  if (user.nguoiDung.vai_tro === "admin" && danhSach?.length) {
+  if (user.nguoiDung.vai_tro !== "truong_khoa" && danhSach?.length) {
     const { data: dsKhoa } = await supabase.from("khoa").select("id, ten_khoa");
     for (const k of dsKhoa ?? []) tenKhoaTheoId.set(k.id, k.ten_khoa);
   }
@@ -81,17 +82,14 @@ export default async function DiBuongPage({
               >
                 <div>
                   <p className="font-medium text-slate-900">
-                    {new Date(phien.ngay_bao_cao).toLocaleDateString("vi-VN")}
-                    {user.nguoiDung.vai_tro === "admin" && tenKhoaTheoId.has(phien.khoa_id) ? (
+                    {hienNgay(phien.ngay_bao_cao)}
+                    {tenKhoaTheoId.has(phien.khoa_id) ? (
                       <span className="text-slate-500"> · {tenKhoaTheoId.get(phien.khoa_id)}</span>
                     ) : null}
                   </p>
                   <p className="text-xs text-slate-500">
                     Bắt đầu lúc{" "}
-                    {new Date(phien.thoi_gian_bat_dau).toLocaleTimeString("vi-VN", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
+                    {hienGio(phien.thoi_gian_bat_dau)}
                   </p>
                 </div>
                 <span

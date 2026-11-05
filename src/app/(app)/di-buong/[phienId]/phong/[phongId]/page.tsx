@@ -11,7 +11,7 @@ export default async function ChecklistPhongPage({
   params: Promise<{ phienId: string; phongId: string }>;
 }) {
   const { phienId, phongId } = await params;
-  const user = await requireRole("truong_khoa", "admin");
+  const user = await requireRole("truong_khoa", "admin", "ban_giam_doc");
   const phien = await getPhienOrNotFound(phienId, user);
   const supabase = await createClient();
 
@@ -46,7 +46,7 @@ export default async function ChecklistPhongPage({
           ← Danh sách phòng
         </Link>
         <h1 className="mt-1 text-lg font-bold text-slate-900">{phongBenh.so_phong}</h1>
-        <p className="text-sm text-slate-500">35 mục kiểm tra — chạm để chấm, tự động lưu.</p>
+        <p className="text-sm text-slate-500">{(mucKiemTra ?? []).length} mục kiểm tra{chiXem ? " — chỉ xem." : " — chạm để chấm, tự động lưu."}</p>
       </div>
 
       <ChecklistForm

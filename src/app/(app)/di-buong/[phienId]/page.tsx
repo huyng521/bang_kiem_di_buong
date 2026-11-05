@@ -2,7 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { getPhienOrNotFound, phan1DaDayDu, layDanhSachPhongTheoTienDo } from "@/lib/phien";
+import { getPhienOrNotFound, phan1DaDayDu, layDanhSachPhongTheoTienDo, phienCoTheSua } from "@/lib/phien";
+import { hienNgay } from "@/lib/thoi-gian";
 
 export default async function TongQuanPhienPage({
   params,
@@ -10,10 +11,10 @@ export default async function TongQuanPhienPage({
   params: Promise<{ phienId: string }>;
 }) {
   const { phienId } = await params;
-  const user = await requireRole("truong_khoa", "admin");
+  const user = await requireRole("truong_khoa", "admin", "ban_giam_doc");
   const phien = await getPhienOrNotFound(phienId, user);
 
-  if (!phan1DaDayDu(phien)) {
+  if (!phan1DaDayDu(phien) && phienCoTheSua(phien, user.nguoiDung.vai_tro)) {
     redirect(`/di-buong/${phienId}/phan-1`);
   }
 
@@ -25,7 +26,7 @@ export default async function TongQuanPhienPage({
     .eq("id", phien.nguoi_kiem_tra_id)
     .maybeSingle();
 
-  const danhSachPhong = await layDanhSachPhongTheoTienDo(phien);
+  const danhSachPhong = await layDanhSachPhongTheoTienDo(phien, phienCoTheSua(phien, user.nguoiDung.vai_tro));
   const tongDaCham = danhSachPhong.reduce((s, p) => s + p.soMucDaCham, 0);
   const tongMuc = danhSachPhong.reduce((s, p) => s + p.tongMuc, 0);
 
@@ -34,7 +35,7 @@ export default async function TongQuanPhienPage({
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-lg font-bold text-slate-900">
-            Đi buồng {new Date(phien.ngay_bao_cao).toLocaleDateString("vi-VN")}
+            Đi buồng {hienNgay(phien.ngay_bao_cao)}
           </h1>
           <p className="text-sm text-slate-500">
             {khoa?.ten_khoa} · {nguoiKiemTra?.ho_ten}
@@ -70,7 +71,7 @@ export default async function TongQuanPhienPage({
         >
           Phần II — Danh sách phòng ({danhSachPhong.length})
         </Link>
-        {phien.trang_thai === "draft" && (
+        {phienCoTheSua(phien, user.nguoiDung.vai_tro) && phien.trang_thai === "draft" && (
           <Link
             href={`/di-buong/${phienId}/hoan-thanh`}
             className="rounded-xl bg-slate-900 px-4 py-3 text-center font-semibold text-white active:bg-slate-800"

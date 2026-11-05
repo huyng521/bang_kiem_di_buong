@@ -104,7 +104,7 @@ export async function xuatExcelPhien(phienId: string): Promise<Buffer> {
   }
   hang += 1;
 
-  // Bảng ma trận: cột = phòng, hàng = 35 mục
+  // Bảng ma trận: cột = phòng, hàng = các mục của phiên bản bảng kiểm
   const hangTieuDeMaTran = hang;
   sheet.getCell(hangTieuDeMaTran, 1).value = "STT";
   sheet.getCell(hangTieuDeMaTran, 1).style = nhanStyle;

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/auth";
-import { getPhienOrNotFound, phan1DaDayDu, layDanhSachPhongTheoTienDo } from "@/lib/phien";
+import { getPhienOrNotFound, phan1DaDayDu, layDanhSachPhongTheoTienDo, phienCoTheSua } from "@/lib/phien";
 import { capNhatThongTinPhong } from "./actions";
 
 export default async function DanhSachPhongPage({
@@ -10,15 +10,15 @@ export default async function DanhSachPhongPage({
   params: Promise<{ phienId: string }>;
 }) {
   const { phienId } = await params;
-  const user = await requireRole("truong_khoa", "admin");
+  const user = await requireRole("truong_khoa", "admin", "ban_giam_doc");
   const phien = await getPhienOrNotFound(phienId, user);
 
-  if (!phan1DaDayDu(phien)) {
+  const chiXem = !phienCoTheSua(phien, user.nguoiDung.vai_tro);
+  if (!phan1DaDayDu(phien) && !chiXem) {
     redirect(`/di-buong/${phienId}/phan-1`);
   }
 
-  const danhSachPhong = await layDanhSachPhongTheoTienDo(phien);
-  const chiXem = phien.trang_thai === "hoan_thanh" && user.nguoiDung.vai_tro !== "admin";
+  const danhSachPhong = await layDanhSachPhongTheoTienDo(phien, !chiXem);
 
   return (
     <div className="space-y-4">
@@ -28,7 +28,7 @@ export default async function DanhSachPhongPage({
         </Link>
         <h1 className="mt-1 text-lg font-bold text-slate-900">Danh sách phòng</h1>
         <p className="text-sm text-slate-500">
-          Nhập ĐD phụ trách và tổng số người bệnh, sau đó chọn phòng để chấm 35 mục kiểm tra.
+          Nhập ĐD phụ trách và tổng số người bệnh, sau đó chọn phòng để chấm các mục kiểm tra.
         </p>
       </div>
 
@@ -94,7 +94,7 @@ export default async function DanhSachPhongPage({
               href={`/di-buong/${phienId}/phong/${p.phongBenh.id}`}
               className="block w-full rounded-lg bg-blue-600 py-3 text-center text-sm font-bold text-white active:bg-blue-700"
             >
-              {chiXem ? "Xem 35 mục kiểm tra" : "Chấm 35 mục kiểm tra →"}
+              {chiXem ? `Xem ${p.tongMuc} mục kiểm tra` : `Chấm ${p.tongMuc} mục kiểm tra →`}
             </Link>
           </li>
         ))}

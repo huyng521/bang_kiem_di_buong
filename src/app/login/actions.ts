@@ -32,7 +32,7 @@ export async function dangNhap(
 
   const { data: nguoiDung } = await supabase
     .from("nguoi_dung")
-    .select("vai_tro, active")
+    .select("vai_tro, active, phai_doi_mat_khau")
     .eq("auth_user_id", data.user.id)
     .maybeSingle();
 
@@ -42,6 +42,8 @@ export async function dangNhap(
       loi: "Tài khoản chưa được quản trị viên cấp quyền sử dụng. Vui lòng liên hệ admin.",
     };
   }
+
+  if (nguoiDung.phai_doi_mat_khau) redirect("/doi-mat-khau");
 
   redirect(
     redirectTo && redirectTo.startsWith("/") ? redirectTo : trangChuTheoVaiTro(nguoiDung.vai_tro)

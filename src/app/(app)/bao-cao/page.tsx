@@ -1,14 +1,10 @@
 import { requireRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { congNgay, homNayVN } from "@/lib/thoi-gian";
 
 function ngayMacDinh() {
-  const den = new Date();
-  const tu = new Date();
-  tu.setDate(tu.getDate() - 29);
-  return {
-    tu: tu.toISOString().slice(0, 10),
-    den: den.toISOString().slice(0, 10),
-  };
+  const den = homNayVN();
+  return { tu: congNgay(den, -29), den };
 }
 
 export default async function BaoCaoPage({
@@ -16,7 +12,7 @@ export default async function BaoCaoPage({
 }: {
   searchParams: Promise<{ tu_ngay?: string; den_ngay?: string }>;
 }) {
-  await requireRole("admin", "ban_giam_doc");
+  await requireRole("admin", "ban_giam_doc", "truong_khoa");
   const { tu_ngay, den_ngay } = await searchParams;
   const macDinh = ngayMacDinh();
   const tuNgay = tu_ngay || macDinh.tu;

@@ -85,14 +85,14 @@ describe("Ghi phiên kiểm tra", () => {
       expect(r.affectedRows ?? 0).toBe(0);
     });
   });
-  it.fails("[LỖI ĐÃ BIẾT – sửa ở Mốc 1] trưởng khoa không tự ẩn mềm được phiên (chỉ admin)", async () => {
+  it("trưởng khoa không tự ẩn mềm được phiên (chỉ admin)", async () => {
     await roiHoanTac(db, async () => {
       await expect(
         voiTuCach(db, ID.authTkA, () => db.query(`update phien_kiem_tra set an = true where id = $1`, [ID.phienA])),
       ).rejects.toThrow();
     });
   });
-  it.fails("[LỖI ĐÃ BIẾT – sửa ở Mốc 1] trưởng khoa không đổi được người kiểm tra của phiên", async () => {
+  it("trưởng khoa không đổi được người kiểm tra của phiên", async () => {
     await roiHoanTac(db, async () => {
       await expect(
         voiTuCach(db, ID.authTkA, () => db.query(`update phien_kiem_tra set nguoi_kiem_tra_id = $2 where id = $1`, [ID.phienA, ID.ndAdmin])),
@@ -129,10 +129,51 @@ describe("Danh mục chỉ admin quản lý", () => {
 });
 
 describe("Tài khoản bị khóa", () => {
-  it.fails("[LỖI ĐÃ BIẾT – sửa ở Mốc 1] bị chặn ở database ngay cả khi còn phiên đăng nhập", async () => {
+  it("bị chặn ở database ngay cả khi còn phiên đăng nhập", async () => {
     await roiHoanTac(db, async () => {
       await db.query(`update nguoi_dung set active = false where id = $1`, [ID.ndTkA]);
       expect(await voiTuCach(db, ID.authTkA, () => dem(`select 1 from phien_kiem_tra`))).toBe(0);
+    });
+  });
+});
+
+describe("Mốc 1 — bổ sung", () => {
+  it("tài khoản bị khóa không ghi được kết quả", async () => {
+    const m1 = await mucTheoStt(db, 2);
+    await roiHoanTac(db, async () => {
+      await db.query(`update nguoi_dung set active = false where id = $1`, [ID.ndTkA]);
+      await expect(
+        voiTuCach(db, ID.authTkA, () =>
+          db.query(`insert into ket_qua_kiem_tra (phien_kiem_tra_phong_id, checklist_item_id, trang_thai) values ($1, $2, 'dat_co')`, [ID.pktpA, m1])),
+      ).rejects.toThrow();
+    });
+  });
+  it("tài khoản bị khóa không đọc được danh mục khoa", async () => {
+    await roiHoanTac(db, async () => {
+      await db.query(`update nguoi_dung set active = false where id = $1`, [ID.ndTkA]);
+      expect(await voiTuCach(db, ID.authTkA, () => dem(`select 1 from khoa`))).toBe(0);
+    });
+  });
+  it("trưởng khoa không tạo được phiên ở trạng thái đã hoàn thành", async () => {
+    await roiHoanTac(db, async () => {
+      await expect(
+        voiTuCach(db, ID.authTkA, () =>
+          db.query(`insert into phien_kiem_tra (khoa_id, nguoi_kiem_tra_id, checklist_version_id, trang_thai)
+                    select $1, $2, id, 'hoan_thanh' from checklist_version limit 1`, [ID.khoaA, ID.ndTkA])),
+      ).rejects.toThrow();
+    });
+  });
+  it("trưởng khoa vẫn hoàn thành được phiên nháp của khoa mình", async () => {
+    await roiHoanTac(db, async () => {
+      const r = await voiTuCach(db, ID.authTkA, () =>
+        db.query(`update phien_kiem_tra set trang_thai = 'hoan_thanh', thoi_gian_hoan_thanh = now() where id = $1`, [ID.phienA]));
+      expect(r.affectedRows).toBe(1);
+    });
+  });
+  it("admin ẩn mềm được phiên", async () => {
+    await roiHoanTac(db, async () => {
+      const r = await voiTuCach(db, ID.authAdmin, () => db.query(`update phien_kiem_tra set an = true where id = $1`, [ID.phienA]));
+      expect(r.affectedRows).toBe(1);
     });
   });
 });

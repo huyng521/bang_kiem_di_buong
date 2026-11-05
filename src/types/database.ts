@@ -32,6 +32,8 @@ export type NguoiDung = {
   vai_tro: VaiTro;
   khoa_id: string | null;
   active: boolean;
+  email: string | null;
+  phai_doi_mat_khau: boolean;
   created_at: string;
 };
 

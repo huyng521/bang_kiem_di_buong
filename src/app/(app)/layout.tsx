@@ -15,12 +15,20 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const navLinks =
     nguoiDung.vai_tro === "admin"
       ? [
-          { href: "/admin", label: "Danh mục" },
+          { href: "/admin", label: "Quản trị" },
+          { href: "/di-buong", label: "Các phiên" },
           { href: "/bao-cao", label: "Báo cáo" },
         ]
       : nguoiDung.vai_tro === "truong_khoa"
-      ? [{ href: "/di-buong", label: "Đi buồng" }]
-      : [{ href: "/bao-cao", label: "Báo cáo" }];
+      ? [
+          { href: "/di-buong", label: "Đi buồng" },
+          { href: "/bao-cao", label: "Báo cáo khoa" },
+        ]
+      : [
+          { href: "/bao-cao", label: "Báo cáo" },
+          { href: "/di-buong", label: "Các phiên" },
+        ];
+  navLinks.push({ href: "/doi-mat-khau", label: "Đổi mật khẩu" });
 
   return (
     <div className="flex min-h-full flex-1 flex-col">

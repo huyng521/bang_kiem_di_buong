@@ -3,16 +3,17 @@
 import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { homNayVN } from "@/lib/thoi-gian";
 
 export async function batDauDiBuong() {
-  const user = await requireRole("truong_khoa", "admin");
+  const user = await requireRole("truong_khoa");
   const supabase = await createClient();
 
   if (!user.nguoiDung.khoa_id) {
     throw new Error("Tài khoản chưa được gán khoa. Vui lòng liên hệ admin.");
   }
 
-  const homNay = new Date().toISOString().slice(0, 10);
+  const homNay = homNayVN();
 
   // Nếu đã có phiên draft hôm nay cho khoa này thì tiếp tục phiên đó, không tạo mới.
   const { data: phienDaCo } = await supabase

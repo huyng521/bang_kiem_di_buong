@@ -29,7 +29,7 @@ export function phan1DaDayDu(phien: PhienKiemTra): boolean {
 }
 
 export function phienCoTheSua(phien: PhienKiemTra, vaiTro: string): boolean {
-  return vaiTro === "admin" || phien.trang_thai === "draft";
+  return vaiTro === "admin" || (vaiTro === "truong_khoa" && phien.trang_thai === "draft");
 }
 
 /** Lấy (hoặc tạo mới nếu phiên còn draft) dòng phien_kiem_tra_phong cho 1 phòng cụ thể. */
@@ -73,7 +73,8 @@ export interface PhongVoiTienDo {
  * Nếu phiên còn draft, tự tạo phien_kiem_tra_phong cho các phòng chưa có.
  */
 export async function layDanhSachPhongTheoTienDo(
-  phien: PhienKiemTra
+  phien: PhienKiemTra,
+  coTheTao = true
 ): Promise<PhongVoiTienDo[]> {
   const supabase = await createClient();
 
@@ -98,7 +99,7 @@ export async function layDanhSachPhongTheoTienDo(
   const theoPhongBenhId = new Map((dsPhienPhong ?? []).map((p) => [p.phong_benh_id, p]));
 
   const phongThieu = (dsPhong ?? []).filter((p) => !theoPhongBenhId.has(p.id));
-  if (phien.trang_thai === "draft" && phongThieu.length > 0) {
+  if (phien.trang_thai === "draft" && phongThieu.length > 0 && coTheTao) {
     const { data: daTao } = await supabase
       .from("phien_kiem_tra_phong")
       .insert(
@@ -127,7 +128,7 @@ export async function layDanhSachPhongTheoTienDo(
     );
   }
 
-  return (dsPhong ?? []).map((p) => {
+  return (dsPhong ?? []).filter((p) => theoPhongBenhId.has(p.id)).map((p) => {
     const pp = theoPhongBenhId.get(p.id)!;
     return {
       phongBenh: p,
@@ -135,7 +136,7 @@ export async function layDanhSachPhongTheoTienDo(
       tenDdPhuTrach: pp.ten_dd_phu_trach,
       tongSoNguoiBenh: pp.tong_so_nguoi_benh,
       soMucDaCham: soDaChamTheoPhong.get(pp.id) ?? 0,
-      tongMuc: tongMuc ?? 35,
+      tongMuc: tongMuc ?? 0,
     };
   });
 }
