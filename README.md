@@ -27,7 +27,7 @@ Có thể đăng nhập bằng tài khoản GitHub cho nhanh.
    mật khẩu này ở nơi an toàn), chọn khu vực gần Việt Nam nhất (vd Singapore).
 3. Đợi khoảng 1–2 phút để Supabase khởi tạo xong.
 4. Vào mục **SQL Editor** (biểu tượng ở thanh bên trái) → **New query**.
-5. Mở file `supabase/schema.sql` trong project này, copy **toàn bộ nội dung**,
+5. Mở lần lượt từng file trong thư mục `supabase/migrations` (theo thứ tự tên file), copy **toàn bộ nội dung**,
    dán vào ô soạn thảo trên Supabase → bấm **Run**.
    - Việc này tạo toàn bộ bảng dữ liệu, phân quyền, và nạp sẵn 35 mục kiểm tra.
    - Nếu thấy dòng "Success. No rows returned" là đã chạy đúng.
@@ -131,7 +131,7 @@ PDF. Các mục này để dành cho Giai đoạn 2–3.
 
 ## 8. Một số lưu ý kỹ thuật (cho người kế thừa code sau này)
 
-- `supabase/schema.sql`: nguồn sự thật cho toàn bộ cấu trúc database, RLS
+- `supabase/migrations/`: nguồn sự thật cho toàn bộ cấu trúc database, RLS
   (row level security theo vai trò), và hàm báo cáo `bao_cao_ty_le_dat`. Chạy
   lại an toàn (idempotent) trên project mới.
 - Next.js 16 đổi `middleware.ts` thành `src/proxy.ts` (export hàm `proxy`) —
