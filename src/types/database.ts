@@ -313,6 +313,38 @@ export interface Database {
     };
     Views: Record<string, never>;
     Functions: {
+      db_xu_huong: {
+        Args: { p_tu: string; p_den: string; p_don_vi?: string; p_khoa?: string[] | null; p_phong?: string | null };
+        Returns: { ky: string; khoa_id: string; so_dat: number; so_ap_dung: number; ty_le_dat: number | null }[];
+      };
+      db_theo_phong: {
+        Args: { p_tu: string; p_den: string; p_khoa: string };
+        Returns: { phong_benh_id: string; so_phong: string; so_dat: number; so_ap_dung: number; ty_le_dat: number | null }[];
+      };
+      db_theo_muc: {
+        Args: { p_tu: string; p_den: string; p_khoa?: string | null; p_phong?: string | null };
+        Returns: { ma_muc_goc: string; stt: number; noi_dung: string; so_dat: number; so_khong_dat: number; ty_le_dat: number | null }[];
+      };
+      db_nhiet_khoa_muc: {
+        Args: { p_tu: string; p_den: string };
+        Returns: { khoa_id: string; ma_muc_goc: string; so_ap_dung: number; ty_le_dat: number | null }[];
+      };
+      db_tuan_thu: {
+        Args: { p_tu: string; p_den: string };
+        Returns: { khoa_id: string; ten_khoa: string; so_ngay_phai: number; so_ngay_co_phien: number; ty_le: number | null }[];
+      };
+      db_chua_di_buong_hom_nay: {
+        Args: Record<string, never>;
+        Returns: { khoa_id: string; ten_khoa: string; dang_lam_do: boolean; la_ngay_phai: boolean }[];
+      };
+      db_phan_1: {
+        Args: { p_tu: string; p_den: string; p_don_vi?: string; p_khoa?: string | null };
+        Returns: {
+          ky: string; so_phien: number; nb_tb: number | null; cap_1_tb: number | null; cap_2_tb: number | null; cap_3_tb: number | null;
+          giuong_dv_trong_tb: number | null; giuong_thuong_trong_tb: number | null; bang_ca_tb: number | null;
+          dd_cong_tac_tb: number | null; dd_ra_truc_tb: number | null; dd_nghi_tb: number | null; ty_so_nb_dd: number | null; cong_suat_giuong: number | null;
+        }[];
+      };
       phien_ban_hieu_luc: { Args: { p_ngay?: string | null }; Returns: string | null };
       tao_phien_ban_moi: { Args: { p_ten: string }; Returns: string };
       ma_muc_moi: { Args: Record<string, never>; Returns: string };
