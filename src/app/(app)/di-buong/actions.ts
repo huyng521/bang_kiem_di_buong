@@ -29,13 +29,9 @@ export async function batDauDiBuong() {
     redirect(`/di-buong/${phienDaCo.id}/phan-1`);
   }
 
-  const { data: version } = await supabase
-    .from("checklist_version")
-    .select("id")
-    .eq("active", true)
-    .order("ngay_hieu_luc", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  // Phiên bản hiệu lực tại thời điểm bắt đầu (database cũng tự gán lại để chắc chắn).
+  const { data: versionId } = await supabase.rpc("phien_ban_hieu_luc", {});
+  const version = versionId ? { id: versionId } : null;
 
   if (!version) {
     throw new Error("Chưa có bảng kiểm nào được kích hoạt. Vui lòng liên hệ admin.");

@@ -38,6 +38,7 @@ export type NguoiDung = {
   created_at: string;
 };
 
+export type TrangThaiPhienBan = "nhap" | "da_cong_bo" | "het_hieu_luc";
 export type ChecklistVersion = {
   id: string;
   ten_phien_ban: string;
@@ -45,6 +46,13 @@ export type ChecklistVersion = {
   ghi_chu_van_ban_can_cu: string | null;
   active: boolean;
   created_at: string;
+  trang_thai: TrangThaiPhienBan;
+  so_hieu_van_ban: string | null;
+  ngay_ban_hanh: string | null;
+  trich_yeu: string | null;
+  nguoi_cong_bo_id: string | null;
+  cong_bo_luc: string | null;
+  nhan_ban_tu_id: string | null;
 };
 
 export type ChecklistItem = {
@@ -54,6 +62,7 @@ export type ChecklistItem = {
   noi_dung: string;
   ghi_chu_huong_dan: string | null;
   active: boolean;
+  ma_muc_goc: string;
 };
 
 export type PhienKiemTra = {
@@ -174,7 +183,7 @@ export type CauHinhHeThong = {
   updated_at: string;
 };
 export type BaoCaoTheoMucRow = {
-  checklist_item_id: string;
+  ma_muc_goc: string;
   stt: number;
   noi_dung: string;
   so_dat: number;
@@ -304,6 +313,14 @@ export interface Database {
     };
     Views: Record<string, never>;
     Functions: {
+      phien_ban_hieu_luc: { Args: { p_ngay?: string | null }; Returns: string | null };
+      tao_phien_ban_moi: { Args: { p_ten: string }; Returns: string };
+      ma_muc_moi: { Args: Record<string, never>; Returns: string };
+      sap_xep_muc: { Args: { p_version: string; p_ids: string[] }; Returns: undefined };
+      cong_bo_phien_ban: {
+        Args: { p_id: string; p_so_hieu: string; p_ngay_ban_hanh: string; p_trich_yeu: string; p_ngay_hieu_luc: string };
+        Returns: undefined;
+      };
       ghi_nhat_ky: {
         Args: { p_hanh_dong: string; p_doi_tuong_loai: string; p_doi_tuong_id?: string | null; p_khoa_id?: string | null; p_chi_tiet?: Record<string, unknown> | null };
         Returns: undefined;

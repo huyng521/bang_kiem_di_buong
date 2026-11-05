@@ -6,7 +6,7 @@ const MUC: { href: string; label: string; mota: string }[] = [
   { href: "/admin/nguoi-dung", label: "Người dùng", mota: "Tạo tài khoản, phân quyền, gán khoa" },
   { href: "/admin/cai-dat", label: "Cài đặt hệ thống", mota: "Tên bệnh viện, logo, mục tiêu tỷ lệ đạt, ngày/giờ nhắc đi buồng" },
   { href: "/admin/nhat-ky", label: "Nhật ký thao tác", mota: "Ai làm gì, lúc nào; lọc và xuất Excel" },
-  { href: "/admin/checklist", label: "Mục bảng kiểm", mota: "Sửa nội dung/ghi chú các mục kiểm tra" },
+  { href: "/admin/checklist", label: "Bảng kiểm và phiên bản", mota: "Tạo phiên bản mới khi có văn bản mới, so sánh, công bố, lịch sử" },
 ];
 
 export default function AdminPage() {

@@ -50,7 +50,7 @@ describe("PDF báo cáo tháng", () => {
     const buf = await taoPdfBaoCaoThang({
       thang: "2026-11", tu: "2026-11-01", den: "2026-11-30", tenKhoa: "Toàn viện", cauHinh: null, logo: null,
       theoKhoa: [{ ten_khoa: "Khoa Nội", so_phien: 20, tong_muc_ap_dung: 600, so_dat: 540, ty_le_dat: 90 }],
-      theoMuc: [{ checklist_item_id: "a", stt: 1, noi_dung: "Tư vấn cho người bệnh khi vào viện.", so_dat: 10, so_khong_dat: 2, so_bo_chuan: 1, ty_le_dat: 83.3 }],
+      theoMuc: [{ ma_muc_goc: "M-001", stt: 1, noi_dung: "Tư vấn cho người bệnh khi vào viện.", so_dat: 10, so_khong_dat: 2, so_bo_chuan: 1, ty_le_dat: 83.3 }],
       topKhongDat: [], khacPhuc: [], tyLeChung: 90,
     });
     expect(buf.subarray(0, 4).toString()).toBe("%PDF");
