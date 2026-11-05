@@ -6,9 +6,9 @@ import { NextResponse, type NextRequest } from "next/server";
 // (2) đá người chưa đăng nhập về /login. Việc kiểm tra vai trò chi tiết
 // (admin/truong_khoa/ban_giam_doc) được làm lại ở từng trang (xem src/lib/auth.ts)
 // theo đúng khuyến nghị của Next.js — không dựa hoàn toàn vào proxy.
-const CONG_KHAI = ["/login", "/quen-mat-khau", "/auth/callback", "/dang-xuat"];
+const CONG_KHAI = ["/api/cron", "/login", "/quen-mat-khau", "/auth/callback", "/dang-xuat"];
 // Trang công khai mà người đã đăng nhập vẫn được ở lại (không bị đẩy về trang chủ).
-const CHO_PHEP_KHI_DA_DANG_NHAP = ["/dang-xuat", "/auth/callback"];
+const CHO_PHEP_KHI_DA_DANG_NHAP = ["/dang-xuat", "/auth/callback", "/api/cron"];
 
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });

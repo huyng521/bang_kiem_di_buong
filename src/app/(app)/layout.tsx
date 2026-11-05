@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireUser } from "@/lib/auth";
 import { dangXuat } from "@/app/login/actions";
+import { createClient } from "@/lib/supabase/server";
 
 const NHAN_VAI_TRO: Record<string, string> = {
   admin: "Quản trị viên",
@@ -11,6 +12,12 @@ const NHAN_VAI_TRO: Record<string, string> = {
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const user = await requireUser();
   const { nguoiDung } = user;
+  const supabase = await createClient();
+  const { count: soChuaDoc } = await supabase
+    .from("thong_bao")
+    .select("id", { count: "exact", head: true })
+    .eq("nguoi_dung_id", nguoiDung.id)
+    .eq("da_doc", false);
 
   const navLinks =
     nguoiDung.vai_tro === "admin"
@@ -42,6 +49,13 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               {nguoiDung.ho_ten} · {NHAN_VAI_TRO[nguoiDung.vai_tro]}
             </p>
           </div>
+          <div className="flex shrink-0 items-center gap-2">
+          <Link href="/thong-bao" className="relative rounded-lg border border-slate-300 px-2.5 py-2 text-sm" aria-label={`Thông báo${soChuaDoc ? `, ${soChuaDoc} chưa đọc` : ""}`}>
+            🔔
+            {soChuaDoc ? (
+              <span className="absolute -right-1.5 -top-1.5 min-w-[18px] rounded-full bg-red-600 px-1 text-center text-[11px] font-bold leading-[18px] text-white">{soChuaDoc > 99 ? "99+" : soChuaDoc}</span>
+            ) : null}
+          </Link>
           <form action={dangXuat}>
             <button
               type="submit"
@@ -50,6 +64,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               Đăng xuất
             </button>
           </form>
+          </div>
         </div>
         <nav className="mx-auto flex max-w-3xl gap-1 overflow-x-auto px-4 pb-2">
           {navLinks.map((link) => (
