@@ -19,9 +19,9 @@ async function cham(pktp: string, ketQua: (string | null)[]) {
     );
   }
 }
-const baoCao = async (tu = "2026-11-01", den = "2026-11-30") =>
-  (await db.query<{ khoa_id: string; ty_le_dat: string | null; tong_muc_ap_dung: number; so_dat: number }>(
-    `select * from bao_cao_ty_le_dat($1, $2)`, [tu, den])).rows;
+const baoCao = async (tu = "2026-11-01", den = "2026-11-30", nguoi: string = ID.authAdmin) =>
+  (await voiTuCach(db, nguoi, () => db.query<{ khoa_id: string; ty_le_dat: string | null; tong_muc_ap_dung: number; so_dat: number }>(
+    `select * from bao_cao_ty_le_dat($1, $2)`, [tu, den]))).rows;
 
 describe("bao_cao_ty_le_dat", () => {
   it("3 đạt, 1 không đạt, 2 bỏ chuẩn, 1 chưa chấm → 75%", async () => {
@@ -62,7 +62,7 @@ describe("bao_cao_ty_le_dat", () => {
   it("trưởng khoa A gọi báo cáo chỉ thấy khoa A", async () => {
     await roiHoanTac(db, async () => {
       await cham(ID.pktpB, ["dat_co"]);
-      const rows = await voiTuCach(db, ID.authTkA, () => baoCao());
+      const rows = await baoCao(undefined, undefined, ID.authTkA);
       expect(rows.every((x) => x.khoa_id === ID.khoaA)).toBe(true);
     });
   });
@@ -76,7 +76,7 @@ describe("view v_ket_qua_tinh_ty_le + bao_cao_ty_le_theo_muc (công thức dùng
       await cham(ID.pktpB, ["dat_co", "khong_co_bo_chuan"]);
       const pk2 = (await db.query<{ id: string }>(`select id from phien_kiem_tra_phong where phien_kiem_tra_id = $1 and id <> $2`, [ID.phienB, ID.pktpB])).rows[0]?.id;
       if (pk2) await db.query(`insert into ket_qua_kiem_tra (phien_kiem_tra_phong_id, checklist_item_id, trang_thai) values ($1,$2,'khong_dat')`, [pk2, m1]);
-      const rows = (await db.query<{ stt: number; ty_le_dat: string | null }>(`select * from bao_cao_ty_le_theo_muc('2026-11-01', '2026-11-30')`)).rows;
+      const rows = (await voiTuCach(db, ID.authAdmin, () => db.query<{ stt: number; ty_le_dat: string | null }>(`select * from bao_cao_ty_le_theo_muc('2026-11-01', '2026-11-30')`))).rows;
       expect(Number(rows.find((r) => r.stt === 1)!.ty_le_dat)).toBe(50);
       expect(rows.find((r) => r.stt === 2)!.ty_le_dat).toBeNull();
     });

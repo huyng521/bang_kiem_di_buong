@@ -177,3 +177,17 @@ describe("Mốc 1 — bổ sung", () => {
     });
   });
 });
+
+describe("Mốc 10 — nguồn dữ liệu báo cáo tối ưu vẫn đúng quyền", () => {
+  it("trưởng khoa A chỉ nhận dòng khoa A; tài khoản khóa không nhận gì; ban giám đốc nhận mọi khoa", async () => {
+    const m1 = await mucTheoStt(db, 1);
+    await roiHoanTac(db, async () => {
+      await db.query(`insert into ket_qua_kiem_tra (phien_kiem_tra_phong_id, checklist_item_id, trang_thai) values ($1,$2,'dat_co')`, [ID.pktpB, m1]);
+      expect(await voiTuCach(db, ID.authTkA, () => dem(`select 1 from ket_qua_trong_khoang('2000-01-01', '2100-01-01')`))).toBe(0);
+      expect(await voiTuCach(db, ID.authTkB, () => dem(`select 1 from ket_qua_trong_khoang('2000-01-01', '2100-01-01')`))).toBe(1);
+      expect(await voiTuCach(db, ID.authBgd, () => dem(`select 1 from ket_qua_trong_khoang('2000-01-01', '2100-01-01')`))).toBe(1);
+      await db.query(`update nguoi_dung set active = false where id = $1`, [ID.ndTkB]);
+      expect(await voiTuCach(db, ID.authTkB, () => dem(`select 1 from ket_qua_trong_khoang('2000-01-01', '2100-01-01')`))).toBe(0);
+    });
+  });
+});

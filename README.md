@@ -82,6 +82,8 @@ Mở trình duyệt vào `http://localhost:3000`, đăng nhập bằng tài kho�
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - `SUPABASE_SERVICE_ROLE_KEY`
+   - `CRON_SECRET` — một chuỗi ngẫu nhiên dài tự đặt (dùng cho nhắc nhở định kỳ, xem `docs/thong-bao-va-cron.md`)
+   - `NEXT_PUBLIC_SITE_URL` — địa chỉ web thật, ví dụ `https://ten-du-an.vercel.app` (dùng cho email quên mật khẩu)
 4. Bấm **Deploy**. Đợi 1–2 phút.
 5. Sau khi xong, Vercel cho bạn 1 đường link dạng
    `https://ten-du-an.vercel.app` — đây là địa chỉ mọi người sẽ dùng để truy
@@ -109,25 +111,24 @@ buồng"** để bắt đầu sử dụng.
 
 ---
 
-## 7. Cấu trúc chức năng (Giai đoạn 1 — đã hoàn thành)
+## 7. Chức năng hiện có (Giai đoạn 1, 2, 3)
 
-- Đăng nhập + phân quyền 3 vai trò: `admin`, `truong_khoa`, `ban_giam_doc`.
-- Trưởng khoa: bắt đầu đi buồng → nhập Phần I (tổng quan hành chính, 15
-  trường) → nhập Phần II (35 mục kiểm tra cho từng phòng, tự động lưu nháp) →
-  ghi ý kiến người bệnh/biện pháp khắc phục → hoàn thành (khóa phiên).
-- Xem lại lịch sử các phiên đã kiểm tra, lọc theo ngày.
-- Xuất Excel cho từng phiên (đầy đủ Phần I + ma trận 35 mục theo từng phòng).
-- Dashboard tỷ lệ đạt theo khoa cho Ban Giám đốc/Admin (loại trừ mục "Không
-  có/Bỏ chuẩn" khỏi mẫu số).
-- Quản trị: CRUD khoa, phòng bệnh, người dùng, nội dung 35 mục kiểm tra.
+- **Giai đoạn 1:** đăng nhập, 3 vai trò, Phần I (15 trường), Phần II (các mục × từng phòng), xuất Excel, dashboard.
+- **Mốc 1:** phân quyền ép ở database, quản lý tài khoản (mật khẩu tạm hiện 1 lần, khóa/mở khóa, đặt lại mật khẩu),
+  bắt đổi mật khẩu lần đầu, quên/đổi mật khẩu.
+- **Mốc 2:** ảnh minh chứng (chụp/chọn, nén trên máy, kho ảnh riêng tư).
+- **Mốc 3:** theo dõi khắc phục (Mới → Đang xử lý → Đã khắc phục → Đã xác nhận / Hủy).
+- **Mốc 4:** PDF phiên (A4 ngang, đủ dấu tiếng Việt), báo cáo tháng PDF/Excel, Cài đặt hệ thống.
+- **Mốc 5:** nhật ký thao tác bất biến.
+- **Mốc 6:** phiên bản bảng kiểm (tạo bản mới, so sánh, công bố theo văn bản căn cứ).
+- **Mốc 7:** dashboard và biểu đồ xu hướng, bảng nhiệt, tuân thủ đi buồng, tổng hợp Phần I.
+- **Mốc 8:** thông báo trong ứng dụng + nhắc định kỳ.
+- **Mốc 9:** cài lên điện thoại (PWA), đi buồng khi mất mạng.
+- **Mốc 10:** nhập hàng loạt từ Excel, tối ưu tốc độ, xuất toàn bộ dữ liệu, tài liệu bàn giao.
 
-### Chưa làm ở Giai đoạn 1 (theo đúng phạm vi đã thống nhất)
-
-Ảnh minh chứng đính kèm, theo dõi khắc phục dạng workflow, chế độ
-offline/PWA, versioning checklist phức tạp, nhắc nhở/thông báo tự động, xuất
-PDF. Các mục này để dành cho Giai đoạn 2–3.
-
----
+Tài liệu (thư mục `docs/`): `huong-dan-truong-khoa.md`, `huong-dan-admin.md`, `van-hanh.md` (sao lưu, khôi phục, sự cố),
+`quy-mo-va-dung-luong.md`, `ra-soat-truoc-khi-dung-toan-vien.md`, `ngoai-tuyen.md`, `thong-bao-va-cron.md`,
+`dung-luong-anh.md`, `sao-luu-va-staging.md`.
 
 ## 8. Một số lưu ý kỹ thuật (cho người kế thừa code sau này)
 

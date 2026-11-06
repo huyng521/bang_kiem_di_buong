@@ -17,14 +17,14 @@ beforeAll(async () => {
 
 describe("Dashboard", () => {
   it("xu hướng theo tháng = 75% (3/4), cùng công thức", async () => {
-    const r = (await db.query<{ ty_le_dat: string }>(`select * from db_xu_huong('2026-11-01', '2026-11-30', 'thang')`)).rows;
+    const r = (await voiTuCach(db, ID.authAdmin, () => db.query<{ ty_le_dat: string }>(`select * from db_xu_huong('2026-11-01', '2026-11-30', 'thang')`))).rows;
     expect(r).toHaveLength(1);
     expect(Number(r[0].ty_le_dat)).toBe(75);
   });
   it("theo phòng và theo mục", async () => {
-    const p = (await db.query<{ ty_le_dat: string }>(`select * from db_theo_phong('2026-11-01', '2026-11-30', $1)`, [ID.khoaB])).rows;
+    const p = (await voiTuCach(db, ID.authAdmin, () => db.query<{ ty_le_dat: string }>(`select * from db_theo_phong('2026-11-01', '2026-11-30', $1)`, [ID.khoaB]))).rows;
     expect(Number(p[0].ty_le_dat)).toBe(75);
-    const m = (await db.query<{ ma_muc_goc: string; so_khong_dat: number }>(`select * from db_theo_muc('2026-11-01', '2026-11-30')`)).rows;
+    const m = (await voiTuCach(db, ID.authAdmin, () => db.query<{ ma_muc_goc: string; so_khong_dat: number }>(`select * from db_theo_muc('2026-11-01', '2026-11-30')`))).rows;
     expect(Number(m.find((x) => x.ma_muc_goc === "M-004")!.so_khong_dat)).toBe(1);
   });
   it("Phần I: tỷ số NB/ĐD = 3, công suất giường = 90%", async () => {

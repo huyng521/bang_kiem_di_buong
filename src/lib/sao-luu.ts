@@ -1,0 +1,17 @@
+export const BANG_SAO_LUU: { bang: string; nhan: string; khoa: string }[] = [
+  { bang: "khoa", nhan: "Khoa", khoa: "id" },
+  { bang: "phong_benh", nhan: "Phòng bệnh", khoa: "id" },
+  { bang: "nguoi_dung", nhan: "Người dùng", khoa: "id" },
+  { bang: "cau_hinh_he_thong", nhan: "Cài đặt hệ thống", khoa: "id" },
+  { bang: "checklist_version", nhan: "Phiên bản bảng kiểm", khoa: "id" },
+  { bang: "checklist_item", nhan: "Mục bảng kiểm", khoa: "id" },
+  { bang: "phien_kiem_tra", nhan: "Phiên kiểm tra (Phần I)", khoa: "id" },
+  { bang: "phien_kiem_tra_phong", nhan: "Phòng trong phiên", khoa: "id" },
+  { bang: "ket_qua_kiem_tra", nhan: "Kết quả chấm", khoa: "id" },
+  { bang: "hanh_dong_khac_phuc", nhan: "Hành động khắc phục", khoa: "id" },
+  { bang: "hanh_dong_khac_phuc_ket_qua", nhan: "Gắn ô vào khắc phục", khoa: "hanh_dong_id" },
+  { bang: "hanh_dong_khac_phuc_lich_su", nhan: "Lịch sử khắc phục", khoa: "id" },
+  { bang: "khac_phuc_bo_qua", nhan: "Mục bỏ qua khắc phục", khoa: "phien_kiem_tra_id" },
+  { bang: "minh_chung_anh", nhan: "Ảnh minh chứng (danh sách, không gồm file ảnh)", khoa: "id" },
+  { bang: "audit_log", nhan: "Nhật ký thao tác", khoa: "id" },
+];

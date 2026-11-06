@@ -8,18 +8,20 @@ import { NhacKhacPhuc } from "@/components/nhac-khac-phuc";
 export default async function DiBuongPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tu_ngay?: string; den_ngay?: string }>;
+  searchParams: Promise<{ tu_ngay?: string; den_ngay?: string; trang?: string }>;
 }) {
   const user = await requireRole("truong_khoa", "admin", "ban_giam_doc");
-  const { tu_ngay, den_ngay } = await searchParams;
+  const { tu_ngay, den_ngay, trang: trangTho } = await searchParams;
+  const trang = Math.max(1, Number(trangTho) || 1);
+  const MOI_TRANG = 30;
   const supabase = await createClient();
 
   let query = supabase
     .from("phien_kiem_tra")
-    .select("id, ngay_bao_cao, trang_thai, thoi_gian_bat_dau, khoa_id")
+    .select("id, ngay_bao_cao, trang_thai, thoi_gian_bat_dau, khoa_id", { count: "exact" })
     .eq("an", false)
     .order("ngay_bao_cao", { ascending: false })
-    .limit(50);
+    .range((trang - 1) * MOI_TRANG, trang * MOI_TRANG - 1);
 
   if (user.nguoiDung.vai_tro === "truong_khoa" && user.nguoiDung.khoa_id) {
     query = query.eq("khoa_id", user.nguoiDung.khoa_id);
@@ -27,7 +29,9 @@ export default async function DiBuongPage({
   if (tu_ngay) query = query.gte("ngay_bao_cao", tu_ngay);
   if (den_ngay) query = query.lte("ngay_bao_cao", den_ngay);
 
-  const { data: danhSach } = await query;
+  const { data: danhSach, count } = await query;
+  const soTrang = Math.max(1, Math.ceil((count ?? 0) / MOI_TRANG));
+  const lienKetTrang = (n: number) => `?${new URLSearchParams({ ...(tu_ngay ? { tu_ngay } : {}), ...(den_ngay ? { den_ngay } : {}), trang: String(n) })}`;
 
   const tenKhoaTheoId = new Map<string, string>();
   if (user.nguoiDung.vai_tro !== "truong_khoa" && danhSach?.length) {
@@ -113,6 +117,13 @@ export default async function DiBuongPage({
             </li>
           )}
         </ul>
+        {soTrang > 1 && (
+          <div className="mt-3 flex items-center justify-between text-sm">
+            {trang > 1 ? <Link href={lienKetTrang(trang - 1)} className="text-blue-600">← Mới hơn</Link> : <span />}
+            <span className="text-slate-500">Trang {trang}/{soTrang}</span>
+            {trang < soTrang ? <Link href={lienKetTrang(trang + 1)} className="text-blue-600">Cũ hơn →</Link> : <span />}
+          </div>
+        )}
       </section>
     </div>
   );

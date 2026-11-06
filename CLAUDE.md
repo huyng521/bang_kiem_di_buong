@@ -23,7 +23,13 @@ Giai đoạn 2–3 chỉ làm trên bản Next.js + Supabase.
 - `src/lib/auth.ts` — `requireUser` / `requireRole`; `src/lib/supabase/{client,server,admin}.ts`
   (`admin.ts` dùng service role key, **chỉ server**).
 - `src/lib/phien.ts`, `src/lib/excel.ts` — nghiệp vụ phiên và xuất file.
-- `tests/db/` — kiểm thử SQL/RLS trên Postgres nhúng (PGlite) chạy đúng các migration.
+- `src/app/(app)/khac-phuc`, `thong-bao`, `admin/{nhat-ky,checklist,nhap-du-lieu,sao-luu,cai-dat}` — Giai đoạn 2–3.
+- `src/app/ngoai-tuyen` + `src/lib/ngoai-tuyen/` + `public/sw.js` — chế độ mất mạng (IndexedDB, hàng đợi, đồng bộ).
+- `src/app/api/` — route cho cron (`CRON_SECRET`) và đồng bộ ngoại tuyến (trả 401/403 thay vì chuyển hướng).
+- `src/lib/pdf/` — PDF bằng @react-pdf/renderer, font `src/assets/fonts` (Be Vietnam Pro, OFL).
+- `tests/db/` — kiểm thử SQL/RLS trên Postgres nhúng (PGlite) chạy đúng các migration;
+  `tests/quy-mo/` — mô phỏng dữ liệu toàn viện (`npx tsx tests/quy-mo/mo-phong.ts 30 10 90`).
+- `docs/` — tài liệu cho người dùng/vận hành (tiếng Việt).
 
 ## Quy ước
 - Tên bảng/cột/biến nghiệp vụ: tiếng Việt không dấu, snake_case trong SQL, camelCase trong TS.
@@ -53,7 +59,8 @@ npm run lint && npm run build
 - **Không hard-code số mục kiểm tra** (35) ở bất kỳ đâu: luôn lấy theo phiên bản bảng kiểm của phiên.
 - **Công thức tỷ lệ đạt duy nhất:** đạt / (đạt + không đạt), loại `khong_co_bo_chuan` và NULL; chỉ phiên
   `hoan_thanh` và chưa ẩn. Mọi màn hình/báo cáo lấy từ view `v_ket_qua_tinh_ty_le` + hàm `ty_le_dat()` —
-  không tự tính riêng.
+  không tự tính riêng. Báo cáo dữ liệu lớn dùng hàm `ket_qua_trong_khoang(tu, den)` (cùng điều kiện, kiểm tra quyền
+  một lần mỗi truy vấn thay vì RLS từng dòng) — sửa công thức thì sửa cả view lẫn hàm này.
 
 ## Ma trận quyền (ép bằng RLS)
 | Hành động | admin | truong_khoa | ban_giam_doc |
