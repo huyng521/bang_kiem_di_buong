@@ -94,6 +94,7 @@ export type PhienKiemTra = {
   bien_phap_khac_phuc: string | null;
 
   created_at: string;
+  cap_nhat_luc: string | null;
 };
 
 export type PhienKiemTraPhong = {
@@ -103,6 +104,7 @@ export type PhienKiemTraPhong = {
   ten_dd_phu_trach: string | null;
   tong_so_nguoi_benh: number | null;
   created_at: string;
+  cap_nhat_luc: string | null;
 };
 
 export type KetQuaKiemTra = {
@@ -111,6 +113,7 @@ export type KetQuaKiemTra = {
   checklist_item_id: string;
   trang_thai: TrangThaiKq | null;
   ghi_chu: string | null;
+  cap_nhat_luc: string | null;
 };
 
 export type MinhChungAnh = {
@@ -331,6 +334,11 @@ export interface Database {
     };
     Views: Record<string, never>;
     Functions: {
+      dong_bo_ket_qua: {
+        Args: { p_pktp: string; p_item: string; p_trang_thai: TrangThaiKq | null; p_ghi_chu: string | null; p_luc: string };
+        Returns: { ket_qua: string; trang_thai_may_chu: TrangThaiKq | null; ghi_chu_may_chu: string | null; luc_may_chu: string }[];
+      };
+      dong_bo_phong: { Args: { p_pktp: string; p_ten_dd: string | null; p_tong_nb: number | null; p_luc: string }; Returns: string };
       tao_thong_bao_dinh_ky: { Args: { p_luc?: string }; Returns: number };
       db_xu_huong: {
         Args: { p_tu: string; p_den: string; p_don_vi?: string; p_khoa?: string[] | null; p_phong?: string | null };

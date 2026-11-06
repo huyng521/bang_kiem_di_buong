@@ -66,6 +66,12 @@ export default async function TongQuanPhienPage({
         >
           Phần I — Tổng quan hành chính
         </Link>
+        {phienCoTheSua(phien, user.nguoiDung.vai_tro) && phien.trang_thai === "draft" && (
+          <a href={`/ngoai-tuyen?phien=${phienId}`} className="rounded-xl border border-teal-300 bg-teal-50 px-4 py-3 text-sm font-semibold text-teal-800 active:bg-teal-100">
+            📶 Đi buồng ở chế độ dùng được khi mất mạng
+            <span className="block text-xs font-normal">Tải phiên về máy; mất mạng vẫn nhập tiếp, có mạng tự đồng bộ.</span>
+          </a>
+        )}
         <Link
           href={`/di-buong/${phienId}/phong`}
           className="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm active:bg-slate-50"

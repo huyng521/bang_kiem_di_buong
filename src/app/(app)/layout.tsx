@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireUser } from "@/lib/auth";
 import { dangXuat } from "@/app/login/actions";
+import { NutDangXuat } from "@/components/nut-dang-xuat";
 import { createClient } from "@/lib/supabase/server";
 
 const NHAN_VAI_TRO: Record<string, string> = {
@@ -56,14 +57,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               <span className="absolute -right-1.5 -top-1.5 min-w-[18px] rounded-full bg-red-600 px-1 text-center text-[11px] font-bold leading-[18px] text-white">{soChuaDoc > 99 ? "99+" : soChuaDoc}</span>
             ) : null}
           </Link>
-          <form action={dangXuat}>
-            <button
-              type="submit"
-              className="shrink-0 rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-600 active:bg-slate-100"
-            >
-              Đăng xuất
-            </button>
-          </form>
+          <NutDangXuat action={dangXuat} />
           </div>
         </div>
         <nav className="mx-auto flex max-w-3xl gap-1 overflow-x-auto px-4 pb-2">

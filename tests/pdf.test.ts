@@ -21,7 +21,7 @@ export function duLieuMau(soMuc = 35, soPhong = 8): DuLieuPhien {
       id: "x", khoa_id: "k", nguoi_kiem_tra_id: "n", checklist_version_id: "v", thoi_gian_bat_dau: "2026-11-05T01:00:00Z", thoi_gian_hoan_thanh: "2026-11-05T03:00:00Z",
       trang_thai: "hoan_thanh", an: false, ngay_bao_cao: "2026-11-05", dd_uy_quyen_khi_vang_mat: "Phạm Thị Hồng Nhung", tong_so_nb_thuc_te: 42, so_nb_cap_1: 6, so_nb_cap_2: 20, so_nb_cap_3: 16,
       so_giuong_dv_trong: 2, so_giuong_thuong_trong: 3, so_nb_nam_bang_ca: 0, tong_so_dd_co_huu: 18, so_dd_dang_cong_tac_trong_ngay: 11, so_dd_ra_truc: 2, so_dd_nghi_bu_nghi_phep: 1, so_dd_nghi_che_do: 0,
-      y_kien_van_de_nguoi_benh: "Người nhà phản ánh nước nóng yếu ở nhà vệ sinh phòng 3.", bien_phap_khac_phuc: "Đã báo Phòng Hành chính quản trị kiểm tra bình nóng lạnh.", created_at: "",
+      y_kien_van_de_nguoi_benh: "Người nhà phản ánh nước nóng yếu ở nhà vệ sinh phòng 3.", bien_phap_khac_phuc: "Đã báo Phòng Hành chính quản trị kiểm tra bình nóng lạnh.", created_at: "", cap_nhat_luc: null,
     },
     tenKhoa: "Khoa Hồi sức tích cực – Chống độc", nguoiBaoCao: "Nguyễn Thị Hương Giang",
     cauHinh: { id: 1, ten_benh_vien: "Bệnh viện Đa khoa Tỉnh", ten_don_vi_quan_ly: "Phòng Điều dưỡng", logo_path: null, muc_tieu_ty_le_dat: 90, ngay_di_buong: [1, 2, 3, 4, 5], gio_nhac_chua_di_buong: "15:00", updated_at: "" },

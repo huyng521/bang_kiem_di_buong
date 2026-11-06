@@ -4,6 +4,7 @@ import { requireRole } from "@/lib/auth";
 import { getPhienOrNotFound, phienCoTheSua } from "@/lib/phien";
 import { HoanThanhForm } from "./form";
 import { hoanThanhPhien } from "./actions";
+import { ChanHoanThanh } from "@/components/chan-hoan-thanh";
 
 export default async function HoanThanhPage({
   params,
@@ -35,6 +36,7 @@ export default async function HoanThanhPage({
         bienPhapBanDau={phien.bien_phap_khac_phuc ?? ""}
       />
 
+      <ChanHoanThanh phienId={phienId}>
       <form action={hoanThanhVoiId}>
         <button
           type="submit"
@@ -46,6 +48,7 @@ export default async function HoanThanhPage({
           Sau khi hoàn thành, phiên sẽ bị khóa và không thể sửa (trừ admin).
         </p>
       </form>
+      </ChanHoanThanh>
     </div>
   );
 }

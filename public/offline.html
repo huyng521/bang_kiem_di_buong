@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mất kết nối — Bảng kiểm đi buồng</title>
+<style>body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:#f8fafc;color:#14282b;margin:0;padding:32px 16px}
+main{max-width:420px;margin:0 auto}h1{font-size:20px}a{display:block;margin-top:12px;padding:14px;border-radius:10px;background:#0a6870;color:#fff;text-align:center;text-decoration:none;font-weight:600}
+#ds a{background:#fff;color:#0a6870;border:1px solid #0a6870}</style></head>
+<body><main><h1>Đang mất kết nối mạng</h1>
+<p>Trang này cần mạng. Các phiên đi buồng đã tải về máy vẫn nhập được ở chế độ ngoại tuyến:</p>
+<div id="ds"><p>Đang tìm phiên đã tải về…</p></div>
+<script>
+// Liệt kê các phiên đã lưu trong IndexedDB để mở chế độ ngoại tuyến.
+(function(){var r=indexedDB.open("bang-kiem-ngoai-tuyen",1);var el=document.getElementById("ds");
+r.onupgradeneeded=function(){r.transaction.abort();};
+r.onerror=function(){el.innerHTML="<p>Máy chưa có phiên nào được tải về.</p>";};
+r.onsuccess=function(){var db=r.result;if(!db.objectStoreNames.contains("phien")){el.innerHTML="<p>Máy chưa có phiên nào được tải về.</p>";return;}
+var q=db.transaction("phien").objectStore("phien").getAll();q.onsuccess=function(){var ds=q.result||[];
+if(!ds.length){el.innerHTML="<p>Máy chưa có phiên nào được tải về.</p>";return;}el.innerHTML="";
+ds.forEach(function(p){var a=document.createElement("a");a.href="/ngoai-tuyen?phien="+encodeURIComponent(p.phienId);
+a.textContent=(p.tenKhoa||"")+" — ngày "+String((p.phien&&p.phien.ngay_bao_cao)||"").split("-").reverse().join("/");el.appendChild(a);});};};})();
+</script></main></body></html>
